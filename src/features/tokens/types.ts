@@ -5,7 +5,6 @@ export interface ListedToken {
   symbol: string;
   decimals: number;
   logoURI?: string;
-  hypCollateralAddress: Address;
 }
 
 export interface ListedTokenWithHypTokens extends ListedToken {

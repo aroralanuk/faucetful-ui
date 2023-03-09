@@ -28,6 +28,7 @@ import { useTokenTransfer } from './useTokenTransfer';
 
 export function TransferTokenForm({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
   const chainIds = useRouteChains(tokenRoutes);
+  console.log('chainIds', tokenRoutes);
   const initialValues: TransferFormValues = useMemo(
     () => ({
       sourceChainId: chainIds[0],

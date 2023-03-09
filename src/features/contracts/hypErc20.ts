@@ -1,6 +1,10 @@
 import { Signer, providers } from 'ethers';
 
-import { HypERC20Collateral__factory, HypERC20__factory } from '@hyperlane-xyz/hyperlane-token';
+import {
+  HypERC20Collateral__factory,
+  HypERC20__factory,
+  HypNative__factory,
+} from '@hyperlane-xyz/hyperlane-token';
 
 export function getHypErc20CollateralContract(
   contractAddress: Address,
@@ -14,4 +18,11 @@ export function getHypErc20Contract(
   signerOrProvider: Signer | providers.Provider,
 ) {
   return HypERC20__factory.connect(contractAddress, signerOrProvider);
+}
+
+export function getHypNativeContract(
+  contractAddress: Address,
+  signerOrProvider: Signer | providers.Provider,
+) {
+  return HypNative__factory.connect(contractAddress, signerOrProvider);
 }

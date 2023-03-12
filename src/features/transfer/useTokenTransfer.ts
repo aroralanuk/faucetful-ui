@@ -3,9 +3,13 @@ import { useCallback, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useChainId } from 'wagmi';
 
+import { utils } from '@hyperlane-xyz/utils';
+
 import { toWei } from '../../utils/amount';
 import { logger } from '../../utils/logger';
 import { sleep } from '../../utils/timeout';
+import { getHypErc20Contract, getHypNativeContract } from '../contracts/hypErc20';
+import { getPoolInfo } from '../contracts/pool';
 import { getProvider } from '../providers';
 import { RouteType, RoutesMap, getTokenRoute } from '../tokens/routes';
 
@@ -37,16 +41,13 @@ export function useTokenTransfer(onStart?: () => void, onDone?: () => void) {
       let stage: Stage = Stage.Prepare;
 
       try {
-        const { amount, sourceChainId, destinationChainId, recipientAddress, tokenAddress } =
-          values;
+        const { amount, sourceChainId, destinationChainId, recipientAddress } = values;
 
-        const tokenRoute = getTokenRoute(
-          sourceChainId,
-          destinationChainId,
-          tokenAddress,
-          tokenRoutes,
-        );
-        if (!tokenRoute) throw new Error('No token route found between chains');
+        console.log('UseTokenTransfer.tsx: values: ', values);
+        const tokenRoute = getTokenRoute(sourceChainId, destinationChainId, tokenRoutes);
+        console.log('UseTokenTransfer.tsx: tokenRoute: ', tokenRoute);
+        if (!tokenRoute || !tokenRoute.sourceTokenAddress)
+          throw new Error('No token route found between chains');
         const isNativeToRemote = tokenRoute.type === RouteType.NativeToRemote;
 
         if (sourceChainId !== chainId) {
@@ -62,18 +63,20 @@ export function useTokenTransfer(onStart?: () => void, onDone?: () => void) {
 
         stage = Stage.Transfer;
 
-        // const hypErc20 = isNativeToRemote
-        //   ? getHypNativeContract(tokenRoute.hypCollateralAddress, provider)
-        //   : getHypErc20Contract(tokenRoute.sourceTokenAddress, provider);
-        // const gasPayment = await hypErc20.quoteGasPayment(destinationChainId);
-        // const transferTxRequest = await hypErc20.populateTransaction.transferRemote(
-        //   destinationChainId,
-        //   utils.addressToBytes32(recipientAddress),
-        //   weiAmount,
-        //   {
-        //     value: gasPayment,
-        //   },
-        // );
+        const hypErc20 = isNativeToRemote
+          ? getHypNativeContract(tokenRoute.sourceTokenAddress, provider)
+          : getHypErc20Contract(tokenRoute.sourceTokenAddress, provider);
+        console.log('UseTokenTransfer.tsx: dest: ', destinationChainId);
+        const gasPayment = await hypErc20.quoteGasPayment(destinationChainId);
+        console.log('UseTokenTransfer.tsx: gasPayment: ', gasPayment.toString());
+        const transferTxRequest = await hypErc20.populateTransaction.transferRemote(
+          destinationChainId,
+          utils.addressToBytes32(recipientAddress),
+          weiAmount,
+          {
+            value: gasPayment.add(weiAmount),
+          },
+        );
 
         // const { wait: transferWait } = await sendTransaction({
         //   chainId: sourceChainId,
@@ -84,6 +87,11 @@ export function useTokenTransfer(onStart?: () => void, onDone?: () => void) {
         // setOriginTxHash(transactionHash);
         // logger.debug('Transfer transaction confirmed, hash:', transactionHash);
         // toastTxSuccess('Remote transfer started!', transactionHash, sourceChainId);
+
+        stage = Stage.Swap;
+
+        console.log('useTokenTransfer: ', await getPoolInfo());
+        // place swap and unwrap here
 
         // if (isNativeToRemote) {
         //   stage = Stage.Swap;

@@ -19,11 +19,7 @@ import { logger } from '../../utils/logger';
 import { ChainSelectField } from '../chains/ChainSelectField';
 import { getChainDisplayName } from '../chains/metadata';
 import { RouteType, RoutesMap, getTokenRoute, isNative, useRouteChains } from '../tokens/routes';
-import {
-  getCachedTokenBalance,
-  useAccountNativeBalance,
-  useAccountTokenBalance,
-} from '../tokens/useTokenBalance';
+import { getCachedTokenBalance, useAccountNativeBalance } from '../tokens/useTokenBalance';
 
 import { TransferTransactionsModal } from './TransferTransactionsModal';
 import { TransferFormValues } from './types';
@@ -217,7 +213,6 @@ export function TransferTokenForm({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
               >
                 Recipient Address
               </label>
-              <RecipientTokenBalance tokenRoutes={tokenRoutes} />
             </div>
             <div className="relative w-full">
               <TextField
@@ -315,27 +310,12 @@ function useSelfTokenBalance(tokenRoutes) {
 
 function SelfTokenBalance({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
   const { balance } = useSelfTokenBalance(tokenRoutes);
-  console.log('balance', balance);
   return <TokenBalance label="My balance" balance={balance} />;
 }
 
 function SelfNativeBalance({ chainId }: { chainId: number }) {
   const { balance } = useAccountNativeBalance(chainId);
-  console.log('balance', balance);
   return <TokenBalance label="My balance" balance={balance} />;
-}
-
-function RecipientTokenBalance({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
-  const { values } = useFormikContext<TransferFormValues>();
-  const { sourceChainId, destinationChainId, tokenAddress } = values;
-  const route = getTokenRoute(sourceChainId, destinationChainId, tokenAddress, tokenRoutes);
-  const addressForBalance = !route
-    ? ''
-    : route.nativeChainId === destinationChainId
-    ? tokenAddress
-    : route.destTokenAddress;
-  const { balance } = useAccountTokenBalance(destinationChainId, addressForBalance);
-  return <TokenBalance label="Remote balance" balance={balance} />;
 }
 
 function MaxButton({ tokenRoutes, disabled }: { tokenRoutes: RoutesMap; disabled?: boolean }) {

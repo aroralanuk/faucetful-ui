@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 
 import { utils } from '@hyperlane-xyz/utils';
 
-import { isValidAddress, normalizeAddress } from '../../utils/addresses';
+import { normalizeAddress } from '../../utils/addresses';
 import { logger } from '../../utils/logger';
 import { getHypErc20Contract, getHypNativeContract } from '../contracts/hypErc20';
 import { getProvider } from '../providers';
@@ -60,7 +60,7 @@ function computeTokenRoutes(tokens: ListedTokenWithHypTokens[]) {
 
     if (token.type === 'native') {
       for (const hypToken of token.hypTokens) {
-        const { chainId: nativeChainId } = token;
+        const { chainId: nativeChainId, address: sourceTokenAddress } = token;
         const { chainId: remoteChainId, address: hypTokenAddress } = hypToken;
 
         const commonRouteProps = {
@@ -70,35 +70,18 @@ function computeTokenRoutes(tokens: ListedTokenWithHypTokens[]) {
           type: RouteType.NativeToRemote,
           ...commonRouteProps,
           destTokenAddress: hypTokenAddress,
+          sourceTokenAddress,
         });
 
         tokenRoutes[remoteChainId][nativeChainId].push({
           type: RouteType.RemoteToNative,
           ...commonRouteProps,
           sourceTokenAddress: hypTokenAddress,
+          destTokenAddress: sourceTokenAddress,
         });
       }
     } else if (token.type === 'sythetic') {
-      console.log('useTokenRoutes allgood');
-      for (const hypToken of token.hypTokens) {
-        const { chainId: nativeChainId } = token;
-        const { chainId: remoteChainId, address: hypTokenAddress } = hypToken;
-
-        const commonRouteProps = {
-          nativeChainId,
-        };
-
-        tokenRoutes[nativeChainId][remoteChainId].push({
-          type: RouteType.RemoteToNative,
-          ...commonRouteProps,
-          sourceTokenAddress: hypTokenAddress,
-        });
-        tokenRoutes[remoteChainId][nativeChainId].push({
-          type: RouteType.NativeToRemote,
-          ...commonRouteProps,
-          destTokenAddress: hypTokenAddress,
-        });
-      }
+      return;
     }
   }
   return tokenRoutes;
@@ -126,16 +109,14 @@ export function getTokenRoutes(
 export function getTokenRoute(
   sourceChainId: number,
   destinationChainId: number,
-  nativeTokenAddress: Address,
   tokenRoutes: RoutesMap,
 ): Route | null {
-  if (!isValidAddress(nativeTokenAddress)) return null;
-  return null;
-  // return (
-  //   getTokenRoutes(sourceChainId, destinationChainId, tokenRoutes).find((r) =>
-  //     areAddressesEqual(nativeTokenAddress, r.nativeTokenAddress),
-  //   ) || null
-  // );
+  console.log('getTokenRoute', sourceChainId, destinationChainId, tokenRoutes);
+  return (
+    getTokenRoutes(sourceChainId, destinationChainId, tokenRoutes).find(
+      (r) => r.sourceTokenAddress && r.destTokenAddress,
+    ) || null
+  );
 }
 
 export function hasTokenRoute(
@@ -144,7 +125,7 @@ export function hasTokenRoute(
   nativeTokenAddress: Address,
   tokenRoutes: RoutesMap,
 ): boolean {
-  return !!getTokenRoute(sourceChainId, destinationChainId, nativeTokenAddress, tokenRoutes);
+  return !!getTokenRoute(sourceChainId, destinationChainId, tokenRoutes);
 }
 
 export function useTokenRoutes() {
@@ -158,7 +139,7 @@ export function useTokenRoutes() {
       logger.info('Searching for token routes');
       const tokens: ListedTokenWithHypTokens[] = [];
       for (const token of getAllTokens()) {
-        logger.info('Inspecting token:', token.symbol);
+        logger.info('Inspecting token:', token);
         const provider = getProvider(token.chainId);
 
         if (token.type === 'native') {

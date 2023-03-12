@@ -49,7 +49,8 @@ export function capitalizeAddress(address: string) {
   return '0x' + address.substring(2).toUpperCase();
 }
 
-export function areAddressesEqual(a1: string, a2: string) {
+export function areAddressesEqual(a1: string, a2?: string) {
+  if (!a2) return false;
   validateAddress(a1, 'compare');
   validateAddress(a2, 'compare');
   return getAddress(a1) === getAddress(a2);

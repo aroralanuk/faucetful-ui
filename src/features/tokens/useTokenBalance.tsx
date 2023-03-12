@@ -13,9 +13,35 @@ export function getTokenBalanceKey(
   return ['tokenBalance', chainId, tokenAddress, accountAddress];
 }
 
+export function getNativeBalanceKey(chainId: number, accountAddress?: Address) {
+  return ['nativeBalance', chainId, accountAddress];
+}
+
 export function useAccountTokenBalance(chainId: number, tokenAddress: Address) {
   const { address: accountAddress } = useAccount();
   return useTokenBalance(chainId, tokenAddress, accountAddress);
+}
+
+export function useAccountNativeBalance(chainId: number) {
+  const { address: accountAddress } = useAccount();
+  return useNativeBalance(chainId, accountAddress);
+}
+
+export function useNativeBalance(chainId: number, accountAddress?: Address) {
+  const {
+    isLoading,
+    isError: hasError,
+    data: balance,
+  } = useQuery(
+    getNativeBalanceKey(chainId, accountAddress),
+    () => {
+      if (!chainId || !accountAddress) return null;
+      return fetchNativeBalance(chainId, accountAddress);
+    },
+    { retry: false },
+  );
+
+  return { isLoading, hasError, balance };
 }
 
 export function useTokenBalance(chainId: number, tokenAddress: Address, accountAddress?: Address) {
@@ -44,6 +70,13 @@ export function getCachedTokenBalance(
   return queryClient.getQueryData(getTokenBalanceKey(chainId, tokenAddress, accountAddress)) as
     | string
     | undefined;
+}
+
+async function fetchNativeBalance(chainId: number, accountAddress: Address) {
+  logger.debug(`Fetching balance for account ${accountAddress} on chain ${chainId}`);
+  const provider = getProvider(chainId);
+  const balance = await provider.getBalance(accountAddress);
+  return balance.toString();
 }
 
 async function fetchTokenBalance(chainId: number, tokenAddress: Address, accountAddress: Address) {

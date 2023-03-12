@@ -18,9 +18,12 @@ import { fromWeiRounded, toWei, tryParseAmount } from '../../utils/amount';
 import { logger } from '../../utils/logger';
 import { ChainSelectField } from '../chains/ChainSelectField';
 import { getChainDisplayName } from '../chains/metadata';
-import { TokenSelectField } from '../tokens/TokenSelectField';
-import { RouteType, RoutesMap, getTokenRoute, useRouteChains } from '../tokens/routes';
-import { getCachedTokenBalance, useAccountTokenBalance } from '../tokens/useTokenBalance';
+import { RouteType, RoutesMap, getTokenRoute, isNative, useRouteChains } from '../tokens/routes';
+import {
+  getCachedTokenBalance,
+  useAccountNativeBalance,
+  useAccountTokenBalance,
+} from '../tokens/useTokenBalance';
 
 import { TransferTransactionsModal } from './TransferTransactionsModal';
 import { TransferFormValues } from './types';
@@ -28,7 +31,8 @@ import { useTokenTransfer } from './useTokenTransfer';
 
 export function TransferTokenForm({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
   const chainIds = useRouteChains(tokenRoutes);
-  console.log('chainIds', tokenRoutes);
+  console.log('TransferTokenForm tokenRoutes', tokenRoutes);
+  console.log('TransferTokenForm chainIds', chainIds);
   const initialValues: TransferFormValues = useMemo(
     () => ({
       sourceChainId: chainIds[0],
@@ -36,6 +40,7 @@ export function TransferTokenForm({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
       amount: '',
       tokenAddress: '',
       recipientAddress: '',
+      isSrcNative: true,
     }),
     [chainIds],
   );
@@ -66,7 +71,6 @@ export function TransferTokenForm({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
     if (!sourceChainId) return { sourceChainId: 'Invalid source chain' };
     if (!destinationChainId) return { destinationChainId: 'Invalid destination chain' };
     if (!isValidAddress(recipientAddress)) return { recipientAddress: 'Invalid recipient' };
-    if (!isValidAddress(tokenAddress)) return { tokenAddress: 'Invalid token' };
     const parsedAmount = tryParseAmount(amount);
     if (!parsedAmount || parsedAmount.lte(0)) return { amount: 'Invalid amount' };
     const cachedBalance = getCachedTokenBalance(
@@ -93,6 +97,8 @@ export function TransferTokenForm({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
     onDoneTransactions,
   );
 
+  // console.log('print isNative: ', isNative('5'));
+
   return (
     <Formik<TransferFormValues>
       initialValues={initialValues}
@@ -108,7 +114,7 @@ export function TransferTokenForm({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
               name="sourceChainId"
               label="From"
               chainIds={chainIds}
-              disabled={isReview}
+              disabled={true}
             />
             <div className="flex flex-col items-center">
               <div className="flex mb-6 sm:space-x-1.5">
@@ -135,38 +141,37 @@ export function TransferTokenForm({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
                   rounded={true}
                 />
               </div>
-              <SwapChainsButton disabled={isReview} />
+              <SwapChainsButton disabled={isReview} tokenRoutes={tokenRoutes} />
             </div>
             <ChainSelectField
               name="destinationChainId"
               label="To"
               chainIds={chainIds}
-              disabled={isReview}
+              disabled={true}
             />
           </div>
           <div className="mt-3 flex justify-between space-x-4">
             <div className="flex-1">
-              <label
-                htmlFor="tokenAddress"
-                className="block uppercase text-sm text-gray-500 pl-0.5"
-              >
-                ERC-20 Token
-              </label>
-              <TokenSelectField
+              <div className="flex justify-between pr-1">
+                {values.isSrcNative ? (
+                  <label htmlFor="tokenAddress" className="block text-sm text-gray-500 pl-0.5">
+                    Testnet ETH
+                  </label>
+                ) : (
+                  <label htmlFor="tokenAddress" className="block text-sm text-gray-500 pl-0.5">
+                    Mainnet ETH
+                  </label>
+                )}
+                {/* <SelfTokenBalance tokenRoutes={tokenRoutes} /> */}
+                <SelfNativeBalance chainId={values.sourceChainId} />
+              </div>
+              {/* <TokenSelectField
                 name="tokenAddress"
                 sourceChainId={values.sourceChainId}
                 destinationChainId={values.destinationChainId}
                 tokenRoutes={tokenRoutes}
                 disabled={isReview}
-              />
-            </div>
-            <div className="flex-1">
-              <div className="flex justify-between pr-1">
-                <label htmlFor="amount" className="block uppercase text-sm text-gray-500 pl-0.5">
-                  Amount
-                </label>
-                <SelfTokenBalance tokenRoutes={tokenRoutes} />
-              </div>
+              /> */}
               <div className="relative w-full">
                 <TextField
                   name="amount"
@@ -177,6 +182,30 @@ export function TransferTokenForm({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
                   disabled={isReview}
                 />
                 <MaxButton disabled={isReview} tokenRoutes={tokenRoutes} />
+              </div>
+            </div>
+            <div className="flex-1">
+              <div className="flex justify-between pr-1">
+                {values.isSrcNative ? (
+                  <label htmlFor="tokenAddress" className="block text-sm text-gray-500 pl-0.5">
+                    Mainnet ETH
+                  </label>
+                ) : (
+                  <label htmlFor="tokenAddress" className="block text-sm text-gray-500 pl-0.5">
+                    Testnet ETH
+                  </label>
+                )}
+                <SelfNativeBalance chainId={values.destinationChainId} />
+              </div>
+              <div className="relative w-full">
+                <TextField
+                  name="amount"
+                  placeholder="0.00"
+                  classes="w-full"
+                  type="number"
+                  step="any"
+                  disabled={true}
+                />
               </div>
             </div>
           </div>
@@ -236,7 +265,13 @@ export function TransferTokenForm({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
   );
 }
 
-function SwapChainsButton({ disabled }: { disabled?: boolean }) {
+function SwapChainsButton({
+  disabled,
+  tokenRoutes,
+}: {
+  disabled?: boolean;
+  tokenRoutes: RoutesMap;
+}) {
   const { values, setFieldValue } = useFormikContext<TransferFormValues>();
   const { sourceChainId, destinationChainId } = values;
 
@@ -244,6 +279,7 @@ function SwapChainsButton({ disabled }: { disabled?: boolean }) {
     if (disabled) return;
     setFieldValue('sourceChainId', destinationChainId);
     setFieldValue('destinationChainId', sourceChainId);
+    setFieldValue('isSrcNative', isNative(destinationChainId.toString(), tokenRoutes));
   };
 
   return (
@@ -273,11 +309,19 @@ function useSelfTokenBalance(tokenRoutes) {
     : route.nativeChainId === sourceChainId
     ? tokenAddress
     : route.sourceTokenAddress;
-  return useAccountTokenBalance(sourceChainId, addressForBalance);
+  // return useAccountTokenBalance(sourceChainId, addressForBalance);
+  return useAccountNativeBalance(sourceChainId);
 }
 
 function SelfTokenBalance({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
   const { balance } = useSelfTokenBalance(tokenRoutes);
+  console.log('balance', balance);
+  return <TokenBalance label="My balance" balance={balance} />;
+}
+
+function SelfNativeBalance({ chainId }: { chainId: number }) {
+  const { balance } = useAccountNativeBalance(chainId);
+  console.log('balance', balance);
   return <TokenBalance label="My balance" balance={balance} />;
 }
 
@@ -349,21 +393,58 @@ function ReviewDetails({ visible, tokenRoutes }: { visible: boolean; tokenRoutes
       <div className="mt-1.5 px-2.5 py-2 space-y-2 rounded border border-gray-400 bg-gray-150 text-sm break-all">
         {requiresApprove && (
           <div>
-            <h4>Transaction 1: Approve Transfer</h4>
-            <div className="mt-1.5 ml-1.5 pl-2 border-l border-gray-300 space-y-1.5 text-xs">
-              <p>{`Token Address: ${tokenAddress}`}</p>
-              <p>{`Collateral Address: ${route?.hypCollateralAddress}`}</p>
+            <div>
+              <h4>Transaction 1: Wrap eth to WETH</h4>
+              <div className="mt-1.5 ml-1.5 pl-2 border-l border-gray-300 space-y-1.5 text-xs">
+                <p>{`WETH contract on ${sourceChainId}: ${route?.hypCollateralAddress}`}</p>
+                <p>{`Amount (wei): ${weiAmount}`}</p>
+              </div>
+            </div>
+            <div>
+              <h4>Transaction 2: Swap WETH to GETH</h4>
+              <div className="mt-1.5 ml-1.5 pl-2 border-l border-gray-300 space-y-1.5 text-xs">
+                <p>{`WETH-GETH Uniswap V3 pair on ${sourceChainId}: ${route?.hypCollateralAddress}`}</p>
+                <p>{`Amount (wei): ${weiAmount}`}</p>
+              </div>
             </div>
           </div>
         )}
         <div>
-          <h4>{`Transaction${requiresApprove ? ' 2' : ''}: Transfer Remote`}</h4>
+          <h4>{`Transaction${requiresApprove ? ' 3' : ' 1'}: Transfer Remote`}</h4>
           <div className="mt-1.5 ml-1.5 pl-2 border-l border-gray-300 space-y-1.5 text-xs">
             <p>{`Remote Token: ${route?.destTokenAddress}`}</p>
             <p>{`Amount (wei): ${weiAmount}`}</p>
           </div>
         </div>
+        {!requiresApprove && (
+          <div>
+            <div>
+              <h4>Transaction 2: Swap GETH to WETH</h4>
+              <div className="mt-1.5 ml-1.5 pl-2 border-l border-gray-300 space-y-1.5 text-xs">
+                <p>{`WETH-GETH Uniswap V3 pair on ${destinationChainId}: ${tokenAddress}`}</p>
+                <p>{`Amount (wei): ${weiAmount}`}</p>
+              </div>
+            </div>
+            <div>
+              <h4>Transaction 3: Unwrap WETH to eth</h4>
+              <div className="mt-1.5 ml-1.5 pl-2 border-l border-gray-300 space-y-1.5 text-xs">
+                <p>{`WETH contract on ${destinationChainId}: ${tokenAddress}`}</p>
+                <p>{`Amount (wei): ${weiAmount}`}</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
+// goerli to arbitrum
+// - transfer remote
+// - swap geth to weth
+// - unwrap weth to eth
+
+// arbitrum to goerli
+// - wrap eth to weth
+// - swap weth to geth
+// - transfer remote

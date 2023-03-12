@@ -10,6 +10,7 @@ import { TransferTokenForm } from './TransferTokenForm';
 
 export function TransferTokenCard() {
   const { tokenRoutes, isLoading, hasError } = useTokenRoutes();
+  console.log('TransferTokenCard', tokenRoutes);
 
   return (
     <Card classes="w-100 sm:w-[31rem] relative">
@@ -26,6 +27,7 @@ export function TransferTokenCard() {
           classes="hover:rotate-90"
         /> */}
       </div>
+
       {tokenRoutes && <TransferTokenForm tokenRoutes={tokenRoutes} />}
       {isLoading && (
         <div className="my-24 flex flex-col items-center">

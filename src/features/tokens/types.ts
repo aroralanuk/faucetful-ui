@@ -1,6 +1,7 @@
 export interface ListedToken {
   chainId: number;
   address: Address;
+  type: string;
   name: string;
   symbol: string;
   decimals: number;

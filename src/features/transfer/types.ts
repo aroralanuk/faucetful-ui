@@ -4,4 +4,5 @@ export interface TransferFormValues {
   amount: string;
   tokenAddress: Address;
   recipientAddress: Address;
+  isSrcNative: boolean;
 }

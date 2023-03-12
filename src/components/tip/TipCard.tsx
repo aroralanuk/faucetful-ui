@@ -15,8 +15,7 @@ export function TipCard() {
       <h2 className="text-white sm:text-lg">Bridge Tokens with Hyperlane Warp Routes!</h2>
       <div className="flex items-end justify-between">
         <p className="text-white mt-1.5 text-xs sm:text-sm max-w-[70%]">
-          Warp Routes make it easy to permisionlessly take your tokens interchain. Fork this
-          template to get started!
+          Warp Routes make it easy to permisionlessly take your tokens interchain.
         </p>
         <a
           href={links.github}

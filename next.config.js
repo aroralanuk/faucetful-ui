@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 
 const { version } = require('./package.json')
+require('dotenv').config();
 
 const isDev = process.env.NODE_ENV !== 'production'
 
@@ -52,6 +53,7 @@ const nextConfig = {
 
   env: {
     NEXT_PUBLIC_VERSION: version,
+    RELAYER_PRIVATE_KEY: process.env.RELAYER_PRIVATE_KEY,
   },
 
   reactStrictMode: true,

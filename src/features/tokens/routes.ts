@@ -111,7 +111,6 @@ export function getTokenRoute(
   destinationChainId: number,
   tokenRoutes: RoutesMap,
 ): Route | null {
-  console.log('getTokenRoute', sourceChainId, destinationChainId, tokenRoutes);
   return (
     getTokenRoutes(sourceChainId, destinationChainId, tokenRoutes).find(
       (r) => r.sourceTokenAddress && r.destTokenAddress,

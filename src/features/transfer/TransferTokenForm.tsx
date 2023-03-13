@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { BigNumber } from 'ethers';
 import { Form, Formik, useFormikContext } from 'formik';
 import { useMemo, useState } from 'react';
 import { useAccount } from 'wagmi';
@@ -18,6 +19,7 @@ import { fromWeiRounded, toWei, tryParseAmount } from '../../utils/amount';
 import { logger } from '../../utils/logger';
 import { ChainSelectField } from '../chains/ChainSelectField';
 import { getChainDisplayName } from '../chains/metadata';
+import { createTrade } from '../contracts/uniswap';
 import { RouteType, RoutesMap, getTokenRoute, isNative, useRouteChains } from '../tokens/routes';
 import { getCachedTokenBalance, useAccountNativeBalance } from '../tokens/useTokenBalance';
 
@@ -34,6 +36,7 @@ export function TransferTokenForm({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
       sourceChainId: chainIds[0],
       destinationChainId: chainIds[1],
       amount: '',
+      amountOut: '',
       tokenAddress: '',
       recipientAddress: '',
       isSrcNative: true,
@@ -158,25 +161,10 @@ export function TransferTokenForm({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
                     Mainnet ETH
                   </label>
                 )}
-                {/* <SelfTokenBalance tokenRoutes={tokenRoutes} /> */}
                 <SelfNativeBalance chainId={values.sourceChainId} />
               </div>
-              {/* <TokenSelectField
-                name="tokenAddress"
-                sourceChainId={values.sourceChainId}
-                destinationChainId={values.destinationChainId}
-                tokenRoutes={tokenRoutes}
-                disabled={isReview}
-              /> */}
               <div className="relative w-full">
-                <TextField
-                  name="amount"
-                  placeholder="0.00"
-                  classes="w-full"
-                  type="number"
-                  step="any"
-                  disabled={isReview}
-                />
+                <AmountField isReview={isReview} />
                 <MaxButton disabled={isReview} tokenRoutes={tokenRoutes} />
               </div>
             </div>
@@ -195,7 +183,7 @@ export function TransferTokenForm({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
               </div>
               <div className="relative w-full">
                 <TextField
-                  name="amount"
+                  name="amountOut"
                   placeholder="0.00"
                   classes="w-full"
                   type="number"
@@ -337,6 +325,31 @@ function MaxButton({ tokenRoutes, disabled }: { tokenRoutes: RoutesMap; disabled
   );
 }
 
+function AmountField({ isReview }: { isReview: boolean }) {
+  const { setFieldValue } = useFormikContext<TransferFormValues>();
+  const { values } = useFormikContext<TransferFormValues>();
+
+  const onChange = async (e) => {
+    e.preventDefault();
+    if (values.amount) {
+      const { amountOut } = await createTrade(BigNumber.from(toWei(values.amount).toString()));
+
+      setFieldValue('amountOut', fromWeiRounded(amountOut.toString()));
+    }
+  };
+  return (
+    <TextField
+      name="amount"
+      placeholder="0.00"
+      classes="w-full"
+      type="number"
+      step="any"
+      disabled={isReview}
+      onKeyUp={onChange}
+    />
+  );
+}
+
 function SelfButton({ disabled }: { disabled?: boolean }) {
   const { address } = useAccount();
   const { setFieldValue } = useFormikContext<TransferFormValues>();
@@ -358,11 +371,12 @@ function SelfButton({ disabled }: { disabled?: boolean }) {
 
 function ReviewDetails({ visible, tokenRoutes }: { visible: boolean; tokenRoutes: RoutesMap }) {
   const {
-    values: { amount, sourceChainId, destinationChainId, tokenAddress },
+    values: { amount, sourceChainId, destinationChainId, tokenAddress, amountOut },
   } = useFormikContext<TransferFormValues>();
   const weiAmount = toWei(amount).toString();
-  const route = getTokenRoute(sourceChainId, destinationChainId, tokenAddress, tokenRoutes);
-  const requiresApprove = route?.type === RouteType.NativeToRemote;
+  const weiAmountOut = toWei(amountOut).toString();
+  const route = getTokenRoute(sourceChainId, destinationChainId, tokenRoutes);
+  const nativeToRemote = route?.type === RouteType.NativeToRemote;
   return (
     <div
       className={`${
@@ -371,7 +385,7 @@ function ReviewDetails({ visible, tokenRoutes }: { visible: boolean; tokenRoutes
     >
       <label className="mt-4 block uppercase text-sm text-gray-500 pl-0.5">Transactions</label>
       <div className="mt-1.5 px-2.5 py-2 space-y-2 rounded border border-gray-400 bg-gray-150 text-sm break-all">
-        {requiresApprove && (
+        {!nativeToRemote && (
           <div>
             <div>
               <h4>Transaction 1: Wrap eth to WETH</h4>
@@ -384,32 +398,32 @@ function ReviewDetails({ visible, tokenRoutes }: { visible: boolean; tokenRoutes
               <h4>Transaction 2: Swap WETH to GETH</h4>
               <div className="mt-1.5 ml-1.5 pl-2 border-l border-gray-300 space-y-1.5 text-xs">
                 <p>{`WETH-GETH Uniswap V3 pair on ${sourceChainId}: ${route?.hypCollateralAddress}`}</p>
-                <p>{`Amount (wei): ${weiAmount}`}</p>
+                <p>{`AmountIn (wei): ${weiAmount}`}</p>
+                <p>{`AmountOut (wei): ${weiAmountOut}`}</p>
               </div>
             </div>
           </div>
         )}
         <div>
-          <h4>{`Transaction${requiresApprove ? ' 3' : ' 1'}: Transfer Remote`}</h4>
+          <h4>{`Transaction${nativeToRemote ? ' 1' : ' 3'}: Transfer Remote`}</h4>
           <div className="mt-1.5 ml-1.5 pl-2 border-l border-gray-300 space-y-1.5 text-xs">
             <p>{`Remote Token: ${route?.destTokenAddress}`}</p>
             <p>{`Amount (wei): ${weiAmount}`}</p>
           </div>
         </div>
-        {!requiresApprove && (
+        {nativeToRemote && (
           <div>
             <div>
               <h4>Transaction 2: Swap GETH to WETH</h4>
               <div className="mt-1.5 ml-1.5 pl-2 border-l border-gray-300 space-y-1.5 text-xs">
-                <p>{`WETH-GETH Uniswap V3 pair on ${destinationChainId}: ${tokenAddress}`}</p>
                 <p>{`Amount (wei): ${weiAmount}`}</p>
+                <p>{`AmountOut (wei): ${weiAmountOut}`}</p>
               </div>
             </div>
             <div>
               <h4>Transaction 3: Unwrap WETH to eth</h4>
               <div className="mt-1.5 ml-1.5 pl-2 border-l border-gray-300 space-y-1.5 text-xs">
-                <p>{`WETH contract on ${destinationChainId}: ${tokenAddress}`}</p>
-                <p>{`Amount (wei): ${weiAmount}`}</p>
+                <p>{`Amount (wei): ${weiAmountOut}`}</p>
               </div>
             </div>
           </div>

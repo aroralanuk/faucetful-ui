@@ -1034,6 +1034,7 @@ __metadata:
     "@rainbow-me/rainbowkit": ^0.8.1
     "@tanstack/react-query": ^4.24.4
     "@trivago/prettier-plugin-sort-imports": ^4.0.0
+    "@types/dotenv": ^8.2.0
     "@types/node": ^18.11.18
     "@types/react": ^18.0.27
     "@types/react-dom": ^18.0.10
@@ -1044,6 +1045,7 @@ __metadata:
     autoprefixer: ^10.4.13
     bignumber.js: ^9.0.2
     buffer: ^6.0.3
+    dotenv: ^16.0.3
     eslint: ^8.33.0
     eslint-config-next: ^13.1.6
     eslint-config-prettier: ^8.6.0
@@ -1940,6 +1942,15 @@ __metadata:
   dependencies:
     "@types/node": "*"
   checksum: fe81351470f2d3165e8b12ce33542eef89ea893e36dd62e8f7d72566dfb7e448376ae962f9f3ea888547ce8b55a40020ca0e01d637fab5d99567673084542641
+  languageName: node
+  linkType: hard
+
+"@types/dotenv@npm:^8.2.0":
+  version: 8.2.0
+  resolution: "@types/dotenv@npm:8.2.0"
+  dependencies:
+    dotenv: "*"
+  checksum: a1f524da7dc18b09bdb6c2613b9abbbe8ca575621cce4625efc7f98daf2ba07c7dbab622c9bb394507a12c5c515f9cbbbba4aeec17b801c88faeb8e8e656d460
   languageName: node
   linkType: hard
 
@@ -4397,6 +4408,13 @@ __metadata:
   dependencies:
     esutils: ^2.0.2
   checksum: fd7673ca77fe26cd5cba38d816bc72d641f500f1f9b25b83e8ce28827fe2da7ad583a8da26ab6af85f834138cf8dae9f69b0cd6ab925f52ddab1754db44d99ce
+  languageName: node
+  linkType: hard
+
+"dotenv@npm:*, dotenv@npm:^16.0.3":
+  version: 16.0.3
+  resolution: "dotenv@npm:16.0.3"
+  checksum: afcf03f373d7a6d62c7e9afea6328e62851d627a4e73f2e12d0a8deae1cd375892004f3021883f8aec85932cd2834b091f568ced92b4774625b321db83b827f8
   languageName: node
   linkType: hard
 

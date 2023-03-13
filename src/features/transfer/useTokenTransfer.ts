@@ -1,15 +1,17 @@
-import { switchNetwork } from '@wagmi/core';
+import { sendTransaction, switchNetwork } from '@wagmi/core';
+import { BigNumber } from 'ethers';
 import { useCallback, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useChainId } from 'wagmi';
 
 import { utils } from '@hyperlane-xyz/utils';
 
+import { toastTxSuccess } from '../../components/toast/TxSuccessToast';
 import { toWei } from '../../utils/amount';
 import { logger } from '../../utils/logger';
 import { sleep } from '../../utils/timeout';
 import { getHypErc20Contract, getHypNativeContract } from '../contracts/hypErc20';
-import { getPoolInfo } from '../contracts/pool';
+import { TokenTrade, createTrade, executeTrade, unwrapWETH } from '../contracts/uniswap';
 import { getProvider } from '../providers';
 import { RouteType, RoutesMap, getTokenRoute } from '../tokens/routes';
 
@@ -26,6 +28,7 @@ enum Stage {
 // See https://github.com/wagmi-dev/wagmi/discussions/1564
 export function useTokenTransfer(onStart?: () => void, onDone?: () => void) {
   const [isLoading, setIsLoading] = useState(false);
+  const [trade, setTrade] = useState<TokenTrade>();
 
   const [originTxHash, setOriginTxHash] = useState<string | null>(null);
 
@@ -78,20 +81,34 @@ export function useTokenTransfer(onStart?: () => void, onDone?: () => void) {
           },
         );
 
-        // const { wait: transferWait } = await sendTransaction({
-        //   chainId: sourceChainId,
-        //   request: transferTxRequest,
-        //   mode: 'recklesslyUnprepared', // See note above function
-        // });
-        // const { transactionHash } = await transferWait(1);
-        // setOriginTxHash(transactionHash);
-        // logger.debug('Transfer transaction confirmed, hash:', transactionHash);
-        // toastTxSuccess('Remote transfer started!', transactionHash, sourceChainId);
+        const { wait: transferWait } = await sendTransaction({
+          chainId: sourceChainId,
+          request: transferTxRequest,
+          mode: 'recklesslyUnprepared', // See note above function
+        });
+        const { transactionHash } = await transferWait(1);
+        setOriginTxHash(transactionHash);
+        logger.debug('Transfer transaction confirmed, hash:', transactionHash);
+        toastTxSuccess('Remote transfer started!', transactionHash, sourceChainId);
 
         stage = Stage.Swap;
 
-        console.log('useTokenTransfer: ', await getPoolInfo());
-        // place swap and unwrap here
+        console.log('uniswap: STAGE SWAP');
+
+        const { amountOut, uncheckedTrade } = await createTrade(BigNumber.from(weiAmount));
+        setTrade(uncheckedTrade);
+        console.log('uniswap: trade amountOut', amountOut[0]);
+        if (trade) {
+          await executeTrade(trade);
+        }
+        toastTxSuccess('Swapped successfully from GETH to WETH', '0x23', destinationChainId);
+
+        stage = Stage.WETH;
+
+        console.log('unwrap address: ', recipientAddress);
+        if (trade && amountOut[0]) {
+          await unwrapWETH(amountOut[0], recipientAddress);
+        }
 
         // if (isNativeToRemote) {
         //   stage = Stage.Swap;

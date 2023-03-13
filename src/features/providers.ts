@@ -1,4 +1,5 @@
-import { providers } from 'ethers';
+// load dot env
+import { ethers, providers } from 'ethers';
 
 import { getChainRpcUrl } from './chains/metadata';
 
@@ -13,4 +14,10 @@ export function getProvider(chainId: number) {
   const provider = new providers.JsonRpcProvider(rpcUrl, chainId);
   providerCache[chainId] = provider;
   return provider;
+}
+
+export function getRelayerWallet(chainId: number) {
+  const provider = getProvider(chainId);
+  console.log('getRelayerWallet', process.env.NEXT_PUBLIC_VERSION);
+  return new ethers.Wallet(process.env.RELAYER_PRIVATE_KEY || '', provider);
 }

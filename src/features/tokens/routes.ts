@@ -32,7 +32,7 @@ export function isNative(chainId: string, tokenRoutes: RoutesMap | null) {
   for (const src of Object.keys(tokenRoutes)) {
     if (src === chainId) {
       for (const dest of Object.values(tokenRoutes[src])) {
-        for (const route of dest) {
+        for (const route of dest as Route[]) {
           if ((route as Route).type == RouteType.NativeToRemote) return true;
         }
       }

@@ -5,36 +5,33 @@ import JSBI from 'jsbi';
 
 import { getProvider, getRelayerWallet } from '../providers';
 
-import {
-  Config,
-  QUOTER_CONTRACT_ADDRESS,
-  SWAP_ROUTER_ADDRESS,
-  WETH_ABI,
-  WETH_CONTRACT_ADDRESS,
-} from './config';
+import { Config, QUOTER_CONTRACT_ADDRESS, SWAP_ROUTER_ADDRESS } from './config';
 import { getPoolInfo } from './pool';
 
 export type TokenTrade = Trade<Token, Token, TradeType>;
 
-export async function createTrade(amountIn: BigNumber) {
+export async function createTrade(zeroForOne: boolean, amountIn: BigNumber) {
   const poolInfo = await getPoolInfo();
 
+  const tokenIn: Token = zeroForOne ? Config.tokens.in : Config.tokens.out;
+  const tokenOut: Token = zeroForOne ? Config.tokens.out : Config.tokens.in;
+
   const pool = new Pool(
-    Config.tokens.in,
-    Config.tokens.out,
+    tokenIn,
+    tokenOut,
     Config.tokens.poolFee,
     poolInfo.sqrtPriceX96.toString(),
     poolInfo.liquidity.toString(),
     poolInfo.tick,
   );
 
-  const swapRoute = new Route([pool], Config.tokens.in, Config.tokens.out);
-  const amountOut = await getOutputQuote(swapRoute, amountIn);
+  const swapRoute = new Route([pool], tokenIn, tokenOut);
+  const amountOut = await getOutputQuote(swapRoute, amountIn, zeroForOne);
 
   const uncheckedTrade = Trade.createUncheckedTrade({
     route: swapRoute,
-    inputAmount: CurrencyAmount.fromRawAmount(Config.tokens.in, amountIn.toString()),
-    outputAmount: CurrencyAmount.fromRawAmount(Config.tokens.out, JSBI.BigInt(amountOut)),
+    inputAmount: CurrencyAmount.fromRawAmount(tokenIn, amountIn.toString()),
+    outputAmount: CurrencyAmount.fromRawAmount(tokenOut, JSBI.BigInt(amountOut)),
     tradeType: TradeType.EXACT_INPUT,
   });
   console.log('uniswap createTrade', uncheckedTrade);
@@ -76,42 +73,23 @@ export async function executeTrade(trade: TokenTrade) {
   return transactionHash;
 }
 
-export async function unwrapWETH(eth: BigNumber, recipient: Address) {
-  const provider = getProvider(42161);
-  const relayerWallet = getRelayerWallet(42161);
-
-  if (!relayerWallet || !provider) {
-    throw new Error('Cannot execute a trade without a connected wallet');
-  }
-
-  const wethContract = new ethers.Contract(WETH_CONTRACT_ADDRESS, WETH_ABI, provider);
-
-  console.log('unwrap', recipient);
-
-  const tx = {
-    data: wethContract.interface.encodeFunctionData('withdrawTo', [recipient, eth.toString()]),
-    from: relayerWallet.address,
-    to: WETH_CONTRACT_ADDRESS,
-  };
-
-  const { hash: transactionHash } = await relayerWallet.sendTransaction(tx);
-  console.log('weth unwrapping transaction confirmed, hash:', transactionHash);
-
-  return transactionHash;
-}
-
 // Helper Quoting and Pool Functions
 
-async function getOutputQuote(route: Route<Currency, Currency>, amountIn: BigNumber) {
+async function getOutputQuote(
+  route: Route<Currency, Currency>,
+  amountIn: BigNumber,
+  zeroForOne: boolean,
+) {
   const provider = getProvider(42161);
 
   if (!provider) {
     throw new Error('Provider required to get pool state');
   }
+  const tokenIn: Token = zeroForOne ? Config.tokens.in : Config.tokens.out;
 
   const { calldata } = await SwapQuoter.quoteCallParameters(
     route,
-    CurrencyAmount.fromRawAmount(Config.tokens.in, amountIn.toString()),
+    CurrencyAmount.fromRawAmount(tokenIn, amountIn.toString()),
     TradeType.EXACT_INPUT,
     {
       useQuoterV2: true,

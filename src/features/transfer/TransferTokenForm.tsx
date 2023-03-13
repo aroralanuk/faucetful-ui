@@ -164,7 +164,7 @@ export function TransferTokenForm({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
                 <SelfNativeBalance chainId={values.sourceChainId} />
               </div>
               <div className="relative w-full">
-                <AmountField isReview={isReview} />
+                <AmountField isReview={isReview} zeroForOne={values.isSrcNative} />
                 <MaxButton disabled={isReview} tokenRoutes={tokenRoutes} />
               </div>
             </div>
@@ -229,7 +229,7 @@ export function TransferTokenForm({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
               <SolidButton
                 type="button"
                 color="blue"
-                onClick={() => triggerTransactions(values, tokenRoutes)}
+                onClick={() => triggerTransactions(values.isSrcNative, values, tokenRoutes)}
                 classes="flex-1 px-3 py-1.5"
               >
                 {`Send to ${getChainDisplayName(values.destinationChainId)}`}
@@ -286,7 +286,7 @@ function TokenBalance({ label, balance }: { label: string; balance?: string | nu
 function useSelfTokenBalance(tokenRoutes) {
   const { values } = useFormikContext<TransferFormValues>();
   const { sourceChainId, destinationChainId, tokenAddress } = values;
-  const route = getTokenRoute(sourceChainId, destinationChainId, tokenAddress, tokenRoutes);
+  const route = getTokenRoute(sourceChainId, destinationChainId, tokenRoutes);
   const addressForBalance = !route
     ? ''
     : route.nativeChainId === sourceChainId
@@ -325,14 +325,17 @@ function MaxButton({ tokenRoutes, disabled }: { tokenRoutes: RoutesMap; disabled
   );
 }
 
-function AmountField({ isReview }: { isReview: boolean }) {
+function AmountField({ isReview, zeroForOne }: { isReview: boolean; zeroForOne: boolean }) {
   const { setFieldValue } = useFormikContext<TransferFormValues>();
   const { values } = useFormikContext<TransferFormValues>();
 
   const onChange = async (e) => {
     e.preventDefault();
     if (values.amount) {
-      const { amountOut } = await createTrade(BigNumber.from(toWei(values.amount).toString()));
+      const { amountOut } = await createTrade(
+        zeroForOne,
+        BigNumber.from(toWei(values.amount).toString()),
+      );
 
       setFieldValue('amountOut', fromWeiRounded(amountOut.toString()));
     }
@@ -390,14 +393,12 @@ function ReviewDetails({ visible, tokenRoutes }: { visible: boolean; tokenRoutes
             <div>
               <h4>Transaction 1: Wrap eth to WETH</h4>
               <div className="mt-1.5 ml-1.5 pl-2 border-l border-gray-300 space-y-1.5 text-xs">
-                <p>{`WETH contract on ${sourceChainId}: ${route?.hypCollateralAddress}`}</p>
                 <p>{`Amount (wei): ${weiAmount}`}</p>
               </div>
             </div>
             <div>
               <h4>Transaction 2: Swap WETH to GETH</h4>
               <div className="mt-1.5 ml-1.5 pl-2 border-l border-gray-300 space-y-1.5 text-xs">
-                <p>{`WETH-GETH Uniswap V3 pair on ${sourceChainId}: ${route?.hypCollateralAddress}`}</p>
                 <p>{`AmountIn (wei): ${weiAmount}`}</p>
                 <p>{`AmountOut (wei): ${weiAmountOut}`}</p>
               </div>

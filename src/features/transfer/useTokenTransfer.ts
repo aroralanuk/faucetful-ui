@@ -10,9 +10,10 @@ import { toastTxSuccess } from '../../components/toast/TxSuccessToast';
 import { toWei } from '../../utils/amount';
 import { logger } from '../../utils/logger';
 import { sleep } from '../../utils/timeout';
-import { getHypErc20Contract, getHypNativeContract } from '../contracts/hypErc20';
-import { TokenTrade, createTrade, executeTrade, unwrapWETH } from '../contracts/uniswap';
-import { getProvider } from '../providers';
+import { getHypErc20Contract } from '../contracts/hypErc20';
+import { TokenTrade, createTrade, executeTrade } from '../contracts/uniswap';
+import { unwrapWETH, wrapETH } from '../contracts/weth';
+import { getProvider, getRelayerWallet } from '../providers';
 import { RouteType, RoutesMap, getTokenRoute } from '../tokens/routes';
 
 import { TransferFormValues } from './types';
@@ -36,7 +37,7 @@ export function useTokenTransfer(onStart?: () => void, onDone?: () => void) {
 
   // TODO implement cancel callback for when modal is closed?
   const triggerTransactions = useCallback(
-    async (values: TransferFormValues, tokenRoutes: RoutesMap) => {
+    async (srcToNative: boolean, values: TransferFormValues, tokenRoutes: RoutesMap) => {
       logger.debug('Attempting approve and transfer transactions');
       setOriginTxHash(null);
       setIsLoading(true);
@@ -45,6 +46,8 @@ export function useTokenTransfer(onStart?: () => void, onDone?: () => void) {
 
       try {
         const { amount, sourceChainId, destinationChainId, recipientAddress } = values;
+
+        console.log('UseTokenTransfer.tsx: values: ', values);
 
         console.log('UseTokenTransfer.tsx: values: ', values);
         const tokenRoute = getTokenRoute(sourceChainId, destinationChainId, tokenRoutes);
@@ -61,76 +64,100 @@ export function useTokenTransfer(onStart?: () => void, onDone?: () => void) {
           await sleep(1500);
         }
 
+        console.log('UseTokenTransfer srcToNative: ', srcToNative);
+
         const weiAmount = toWei(amount).toString();
         const provider = getProvider(sourceChainId);
 
         stage = Stage.Transfer;
 
-        const hypErc20 = isNativeToRemote
-          ? getHypNativeContract(tokenRoute.sourceTokenAddress, provider)
-          : getHypErc20Contract(tokenRoute.sourceTokenAddress, provider);
-        console.log('UseTokenTransfer.tsx: dest: ', destinationChainId);
-        const gasPayment = await hypErc20.quoteGasPayment(destinationChainId);
-        console.log('UseTokenTransfer.tsx: gasPayment: ', gasPayment.toString());
-        const transferTxRequest = await hypErc20.populateTransaction.transferRemote(
-          destinationChainId,
-          utils.addressToBytes32(recipientAddress),
-          weiAmount,
-          {
-            value: gasPayment.add(weiAmount),
-          },
-        );
+        if (srcToNative) {
+          const hypErc20 = getHypErc20Contract(tokenRoute.sourceTokenAddress, provider);
+          const gasPayment = await hypErc20.quoteGasPayment(destinationChainId);
+          console.log('UseTokenTransfer.tsx: gasPayment: ', gasPayment.toString());
+          const transferTxRequest = await hypErc20.populateTransaction.transferRemote(
+            destinationChainId,
+            utils.addressToBytes32(recipientAddress),
+            weiAmount,
+            {
+              value: gasPayment.add(weiAmount),
+            },
+          );
 
-        const { wait: transferWait } = await sendTransaction({
-          chainId: sourceChainId,
-          request: transferTxRequest,
-          mode: 'recklesslyUnprepared', // See note above function
-        });
-        const { transactionHash } = await transferWait(1);
-        setOriginTxHash(transactionHash);
-        logger.debug('Transfer transaction confirmed, hash:', transactionHash);
-        toastTxSuccess('Remote transfer started!', transactionHash, sourceChainId);
+          const { wait: transferWait } = await sendTransaction({
+            chainId: sourceChainId,
+            request: transferTxRequest,
+            mode: 'recklesslyUnprepared', // See note above function
+          });
+          const { transactionHash } = await transferWait(1);
+          setOriginTxHash(transactionHash);
+          logger.debug('Transfer transaction confirmed, hash:', transactionHash);
+          toastTxSuccess('Remote transfer started!', transactionHash, sourceChainId);
 
-        stage = Stage.Swap;
+          stage = Stage.Swap;
 
-        console.log('uniswap: STAGE SWAP');
+          const { amountOut, uncheckedTrade } = await createTrade(true, BigNumber.from(weiAmount));
+          setTrade(uncheckedTrade);
+          console.log('uniswap: trade amountOut', amountOut[0]);
+          if (uncheckedTrade) {
+            await executeTrade(uncheckedTrade);
+          } else {
+            throw new Error('No trade found');
+          }
+          toastTxSuccess('Swapped successfully from GETH to WETH', '0x23', destinationChainId);
 
-        const { amountOut, uncheckedTrade } = await createTrade(BigNumber.from(weiAmount));
-        setTrade(uncheckedTrade);
-        console.log('uniswap: trade amountOut', amountOut[0]);
-        if (trade) {
-          await executeTrade(trade);
+          stage = Stage.WETH;
+          if (trade && amountOut[0]) {
+            await unwrapWETH(amountOut[0], recipientAddress);
+          }
+        } else {
+          stage = Stage.WETH;
+
+          await wrapETH(BigNumber.from(weiAmount));
+
+          stage = Stage.Swap;
+
+          const { amountOut, uncheckedTrade } = await createTrade(false, BigNumber.from(weiAmount));
+          setTrade(uncheckedTrade);
+          console.log('uniswap: amountOut', amountOut[0]);
+          console.log('uniswap: trade ', uncheckedTrade);
+          if (uncheckedTrade) {
+            await executeTrade(uncheckedTrade);
+          } else {
+            throw new Error('No trade found');
+          }
+          toastTxSuccess('Swapped successfully from WETH to GETH', '0x56', destinationChainId);
+
+          stage = Stage.Transfer;
+
+          const hypErc20 = getHypErc20Contract(tokenRoute.sourceTokenAddress, provider);
+          const gasPayment = await hypErc20.quoteGasPayment(destinationChainId);
+          console.log('UseTokenTransfer.tsx: gasPayment: ', gasPayment);
+
+          const relayerWallet = getRelayerWallet(sourceChainId);
+
+          const AmountWithFees = amountOut[0].sub(gasPayment);
+
+          if (AmountWithFees.lt(0)) {
+            throw new Error('Insufficient funds to cover relayer fees');
+          }
+
+          const tx = {
+            data: hypErc20.interface.encodeFunctionData('transferRemote', [
+              destinationChainId,
+              utils.addressToBytes32(recipientAddress),
+              AmountWithFees.toString(),
+            ]),
+            from: relayerWallet.address,
+            to: tokenRoute.sourceTokenAddress,
+            value: gasPayment,
+          };
+
+          const { hash: transactionHash } = await relayerWallet.sendTransaction(tx);
+          setOriginTxHash(transactionHash);
+          logger.debug('Transfer transaction confirmed, hash:', transactionHash);
+          toastTxSuccess('Remote transfer started!', transactionHash, sourceChainId);
         }
-        toastTxSuccess('Swapped successfully from GETH to WETH', '0x23', destinationChainId);
-
-        stage = Stage.WETH;
-
-        console.log('unwrap address: ', recipientAddress);
-        if (trade && amountOut[0]) {
-          await unwrapWETH(amountOut[0], recipientAddress);
-        }
-
-        // if (isNativeToRemote) {
-        //   stage = Stage.Swap;
-        //   const erc20 = getErc20Contract(tokenAddress, provider);
-        //   const approveTxRequest = await erc20.populateTransaction.approve(
-        //     tokenRoute.hypCollateralAddress,
-        //     weiAmount,
-        //   );
-
-        //   const { wait: approveWait } = await sendTransaction({
-        //     chainId: sourceChainId,
-        //     request: approveTxRequest,
-        //     mode: 'recklesslyUnprepared', // See note above function
-        //   });
-        //   const approveTxReceipt = await approveWait(1);
-        //   logger.debug('Approve transaction confirmed, hash:', approveTxReceipt.transactionHash);
-        //   toastTxSuccess(
-        //     'Approve transaction sent!',
-        //     approveTxReceipt.transactionHash,
-        //     sourceChainId,
-        //   );
-        // }
       } catch (error) {
         logger.error(`Error at stage ${stage} `, error);
         if (JSON.stringify(error).includes('ChainMismatchError')) {

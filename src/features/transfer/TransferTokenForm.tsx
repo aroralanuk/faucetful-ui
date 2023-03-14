@@ -40,6 +40,8 @@ export function TransferTokenForm({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
       tokenAddress: '',
       recipientAddress: '',
       isSrcNative: true,
+      messageStatus: 'idle',
+      activeRelayer: true,
     }),
     [chainIds],
   );
@@ -229,7 +231,7 @@ export function TransferTokenForm({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
               <SolidButton
                 type="button"
                 color="blue"
-                onClick={() => triggerTransactions(values.isSrcNative, values, tokenRoutes)}
+                onClick={() => triggerTransactions(values, tokenRoutes)}
                 classes="flex-1 px-3 py-1.5"
               >
                 {`Send to ${getChainDisplayName(values.destinationChainId)}`}

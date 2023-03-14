@@ -27,7 +27,6 @@ export interface Route {
 export type RoutesMap = Record<number, Record<number, Route[]>>;
 
 export function isNative(chainId: string, tokenRoutes: RoutesMap | null) {
-  console.log('isNative: ', tokenRoutes);
   if (tokenRoutes == null) return false;
   for (const src of Object.keys(tokenRoutes)) {
     if (src === chainId) {
@@ -56,8 +55,6 @@ function computeTokenRoutes(tokens: ListedTokenWithHypTokens[]) {
 
   // Compute all possible routes, in both directions
   for (const token of tokens) {
-    console.log('useTokenRoutes computeRoutes', token);
-
     if (token.type === 'native') {
       for (const hypToken of token.hypTokens) {
         const { chainId: nativeChainId, address: sourceTokenAddress } = token;

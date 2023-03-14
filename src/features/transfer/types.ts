@@ -6,4 +6,6 @@ export interface TransferFormValues {
   tokenAddress: Address;
   recipientAddress: Address;
   isSrcNative: boolean;
+  messageStatus: string;
+  activeRelayer: boolean;
 }

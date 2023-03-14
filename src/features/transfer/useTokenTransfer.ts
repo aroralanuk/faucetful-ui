@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { useChainId } from 'wagmi';
 
 import { utils } from '@hyperlane-xyz/utils';
+import { useMessageTimeline } from '@hyperlane-xyz/widgets';
 
 import { toastTxSuccess } from '../../components/toast/TxSuccessToast';
 import { toWei } from '../../utils/amount';
@@ -14,7 +15,7 @@ import { getHypErc20Contract } from '../contracts/hypErc20';
 import { TokenTrade, createTrade, executeTrade } from '../contracts/uniswap';
 import { unwrapWETH, wrapETH } from '../contracts/weth';
 import { getProvider, getRelayerWallet } from '../providers';
-import { RouteType, RoutesMap, getTokenRoute } from '../tokens/routes';
+import { RoutesMap, getTokenRoute } from '../tokens/routes';
 
 import { TransferFormValues } from './types';
 
@@ -30,14 +31,38 @@ enum Stage {
 export function useTokenTransfer(onStart?: () => void, onDone?: () => void) {
   const [isLoading, setIsLoading] = useState(false);
   const [trade, setTrade] = useState<TokenTrade>();
+  const [deliveryMsg, setDeliveryMsg] = useState<string | undefined>(undefined);
+
+  // const { values } = useFormikContext<TransferFormValues>();
 
   const [originTxHash, setOriginTxHash] = useState<string | null>(null);
+  const { message } = useMessageTimeline({
+    originTxHash: originTxHash || undefined,
+  });
 
   const chainId = useChainId();
 
+  // async function waitForDelivery() {
+  //   const maxWait = 60; // 60 seconds
+  //   let timeSpendWaiting = 0;
+  //   while (timeSpendWaiting < maxWait) {
+  //     // wait for a short time before checking again
+  //     await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  //     console.log('checking for modal delivery... = ', values);
+
+  //     // check whether the value has changed
+  //     if (message?.id) {
+  //       return true;
+  //     }
+  //     timeSpendWaiting++;
+  //   }
+  //   return false;
+  // }
+
   // TODO implement cancel callback for when modal is closed?
   const triggerTransactions = useCallback(
-    async (srcToNative: boolean, values: TransferFormValues, tokenRoutes: RoutesMap) => {
+    async (values: TransferFormValues, tokenRoutes: RoutesMap) => {
       logger.debug('Attempting approve and transfer transactions');
       setOriginTxHash(null);
       setIsLoading(true);
@@ -45,16 +70,17 @@ export function useTokenTransfer(onStart?: () => void, onDone?: () => void) {
       let stage: Stage = Stage.Prepare;
 
       try {
-        const { amount, sourceChainId, destinationChainId, recipientAddress } = values;
+        const {
+          amount,
+          sourceChainId,
+          destinationChainId,
+          recipientAddress,
+          isSrcNative: srcToNative,
+        } = values;
 
-        console.log('UseTokenTransfer.tsx: values: ', values);
-
-        console.log('UseTokenTransfer.tsx: values: ', values);
         const tokenRoute = getTokenRoute(sourceChainId, destinationChainId, tokenRoutes);
-        console.log('UseTokenTransfer.tsx: tokenRoute: ', tokenRoute);
         if (!tokenRoute || !tokenRoute.sourceTokenAddress)
           throw new Error('No token route found between chains');
-        const isNativeToRemote = tokenRoute.type === RouteType.NativeToRemote;
 
         if (sourceChainId !== chainId) {
           await switchNetwork({
@@ -64,8 +90,6 @@ export function useTokenTransfer(onStart?: () => void, onDone?: () => void) {
           await sleep(1500);
         }
 
-        console.log('UseTokenTransfer srcToNative: ', srcToNative);
-
         const weiAmount = toWei(amount).toString();
         const provider = getProvider(sourceChainId);
 
@@ -74,7 +98,6 @@ export function useTokenTransfer(onStart?: () => void, onDone?: () => void) {
         if (srcToNative) {
           const hypErc20 = getHypErc20Contract(tokenRoute.sourceTokenAddress, provider);
           const gasPayment = await hypErc20.quoteGasPayment(destinationChainId);
-          console.log('UseTokenTransfer.tsx: gasPayment: ', gasPayment.toString());
           const transferTxRequest = await hypErc20.populateTransaction.transferRemote(
             destinationChainId,
             utils.addressToBytes32(recipientAddress),
@@ -96,20 +119,29 @@ export function useTokenTransfer(onStart?: () => void, onDone?: () => void) {
 
           stage = Stage.Swap;
 
-          const { amountOut, uncheckedTrade } = await createTrade(true, BigNumber.from(weiAmount));
-          setTrade(uncheckedTrade);
-          console.log('uniswap: trade amountOut', amountOut[0]);
-          if (uncheckedTrade) {
-            await executeTrade(uncheckedTrade);
-          } else {
-            throw new Error('No trade found');
-          }
-          toastTxSuccess('Swapped successfully from GETH to WETH', '0x23', destinationChainId);
+          // console.log('UseTokenTransfer.tsx: modal message: ', await waitForDelivery());
+          // await new Promise((resolve) => setTimeout(resolve, 45000));
 
-          stage = Stage.WETH;
-          if (trade && amountOut[0]) {
-            await unwrapWETH(amountOut[0], recipientAddress);
+          if (false) {
+            const { amountOut, uncheckedTrade } = await createTrade(
+              true,
+              BigNumber.from(weiAmount),
+            );
+            setTrade(uncheckedTrade);
+            console.log('uniswap: trade amountOut', amountOut[0]);
+            if (uncheckedTrade) {
+              await executeTrade(uncheckedTrade);
+            } else {
+              throw new Error('No trade found');
+            }
+            toastTxSuccess('Swapped successfully from GETH to WETH', '0x23', destinationChainId);
+
+            stage = Stage.WETH;
+            if (trade && amountOut[0]) {
+              await unwrapWETH(amountOut[0], recipientAddress);
+            }
           }
+          console.log('finished modal delivery');
         } else {
           stage = Stage.WETH;
 

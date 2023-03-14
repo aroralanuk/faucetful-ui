@@ -28,9 +28,9 @@ export function TransferTransactionsModal({
   const connectorName = connector?.name || 'wallet';
 
   const {
-    values: { sourceChainId, destinationChainId, tokenAddress },
+    values: { sourceChainId, destinationChainId },
   } = useFormikContext<TransferFormValues>();
-  const route = getTokenRoute(sourceChainId, destinationChainId, tokenAddress, tokenRoutes);
+  const route = getTokenRoute(sourceChainId, destinationChainId, tokenRoutes);
   const requiresApprove = route?.type === RouteType.NativeToRemote;
 
   const isPermisionlessRoute = !(
@@ -76,7 +76,7 @@ function Timeline({
   const { stage, timings, message } = useMessageTimeline({
     originTxHash: originTxHash || undefined,
   });
-  console.log('Modal Timeline: ', stage, timings, message);
+
   return (
     <div className="mt-4 mb-2 w-full flex flex-col justify-center items-center timeline-container">
       <MessageTimeline
@@ -100,17 +100,24 @@ function Timeline({
           Please connect wallet to proceed
         </div>
       )}
-      {message && (
-        <a
-          className="mt-4 text-gray-500 underline underline-offset-2"
-          href={`${links.explorer}/message/${trimLeading0x(message.id)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Open Transaction in Hyperlane Explorer
-        </a>
-      )}
+      {message && <Message id={message.id} status={message.status} />}
     </div>
+  );
+}
+
+function Message({ id, status }: { id: string; status: MessageStatus }) {
+  // useFormikContext<TransferFormValues>().setFieldValue('messageStatus', status);
+  // console.log('modal status: ', status);
+
+  return (
+    <a
+      className="mt-4 text-gray-500 underline underline-offset-2"
+      href={`${links.explorer}/message/${trimLeading0x(id)}`}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      Open Transaction in Hyperlane Explorer
+    </a>
   );
 }
 

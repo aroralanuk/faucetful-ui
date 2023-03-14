@@ -29,8 +29,6 @@ import { useTokenTransfer } from './useTokenTransfer';
 
 export function TransferTokenForm({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
   const chainIds = useRouteChains(tokenRoutes);
-  console.log('TransferTokenForm tokenRoutes', tokenRoutes);
-  console.log('TransferTokenForm chainIds', chainIds);
   const initialValues: TransferFormValues = useMemo(
     () => ({
       sourceChainId: chainIds[0],
@@ -97,8 +95,6 @@ export function TransferTokenForm({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
     onStartTransactions,
     onDoneTransactions,
   );
-
-  // console.log('print isNative: ', isNative('5'));
 
   return (
     <Formik<TransferFormValues>

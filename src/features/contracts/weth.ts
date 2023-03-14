@@ -21,6 +21,8 @@ export async function wrapETH(eth: BigNumber) {
   });
   const wrapTxReceipt = await wrapWait(1);
   console.log('Wrap transaction confirmed, hash:', wrapTxReceipt.transactionHash);
+
+  return wrapTxReceipt.transactionHash;
 }
 
 export async function unwrapWETH(eth: BigNumber, recipient: Address) {

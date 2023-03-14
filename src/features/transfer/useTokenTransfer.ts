@@ -42,24 +42,6 @@ export function useTokenTransfer(onStart?: () => void, onDone?: () => void) {
 
   const chainId = useChainId();
 
-  // async function waitForDelivery() {
-  //   const maxWait = 60; // 60 seconds
-  //   let timeSpendWaiting = 0;
-  //   while (timeSpendWaiting < maxWait) {
-  //     // wait for a short time before checking again
-  //     await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  //     console.log('checking for modal delivery... = ', values);
-
-  //     // check whether the value has changed
-  //     if (message?.id) {
-  //       return true;
-  //     }
-  //     timeSpendWaiting++;
-  //   }
-  //   return false;
-  // }
-
   // TODO implement cancel callback for when modal is closed?
   const triggerTransactions = useCallback(
     async (values: TransferFormValues, tokenRoutes: RoutesMap) => {
@@ -117,35 +99,48 @@ export function useTokenTransfer(onStart?: () => void, onDone?: () => void) {
           logger.debug('Transfer transaction confirmed, hash:', transactionHash);
           toastTxSuccess('Remote transfer started!', transactionHash, sourceChainId);
 
-          stage = Stage.Swap;
-
           // console.log('UseTokenTransfer.tsx: modal message: ', await waitForDelivery());
           // await new Promise((resolve) => setTimeout(resolve, 45000));
 
-          if (false) {
-            const { amountOut, uncheckedTrade } = await createTrade(
-              true,
-              BigNumber.from(weiAmount),
-            );
-            setTrade(uncheckedTrade);
-            console.log('uniswap: trade amountOut', amountOut[0]);
-            if (uncheckedTrade) {
-              await executeTrade(uncheckedTrade);
-            } else {
-              throw new Error('No trade found');
-            }
-            toastTxSuccess('Swapped successfully from GETH to WETH', '0x23', destinationChainId);
+          const maxWait = 45; // 60 seconds
+          let timeSpendWaiting = 0;
+          while (timeSpendWaiting < maxWait) {
+            // wait for a short time before checking again
+            await new Promise((resolve) => setTimeout(resolve, 1000));
 
-            stage = Stage.WETH;
-            if (trade && amountOut[0]) {
-              await unwrapWETH(amountOut[0], recipientAddress);
+            console.log('checking for modal delivery... = ', originTxHash);
+
+            // check whether the value has changed
+            if (originTxHash) {
+              return true;
             }
+            timeSpendWaiting++;
           }
-          console.log('finished modal delivery');
+
+          stage = Stage.Swap;
+
+          const { amountOut, uncheckedTrade } = await createTrade(true, BigNumber.from(weiAmount));
+          setTrade(uncheckedTrade);
+          console.log('uniswap: trade amountOut', amountOut[0]);
+          if (!uncheckedTrade) {
+            throw new Error('No trade found');
+          }
+          const execHash = await executeTrade(uncheckedTrade);
+          toastTxSuccess('Swapped successfully from GETH to WETH', execHash, destinationChainId);
+
+          stage = Stage.WETH;
+          if (!trade || !amountOut[0]) {
+            throw new Error('Unwrap failed');
+          }
+          const unwrapHash = await unwrapWETH(amountOut[0], recipientAddress);
+          toastTxSuccess('Unwrapped successfully to ETH', unwrapHash, destinationChainId);
         } else {
+          // arbitrum to goerli
+
           stage = Stage.WETH;
 
-          await wrapETH(BigNumber.from(weiAmount));
+          const wrapHash = await wrapETH(BigNumber.from(weiAmount));
+          toastTxSuccess('Unwrapped successfully to ETH', wrapHash, sourceChainId);
 
           stage = Stage.Swap;
 
@@ -153,12 +148,11 @@ export function useTokenTransfer(onStart?: () => void, onDone?: () => void) {
           setTrade(uncheckedTrade);
           console.log('uniswap: amountOut', amountOut[0]);
           console.log('uniswap: trade ', uncheckedTrade);
-          if (uncheckedTrade) {
-            await executeTrade(uncheckedTrade);
-          } else {
+          if (!uncheckedTrade) {
             throw new Error('No trade found');
           }
-          toastTxSuccess('Swapped successfully from WETH to GETH', '0x56', destinationChainId);
+          const execHash = await executeTrade(uncheckedTrade);
+          toastTxSuccess('Swapped successfully from WETH to GETH', execHash, sourceChainId);
 
           stage = Stage.Transfer;
 
@@ -188,7 +182,7 @@ export function useTokenTransfer(onStart?: () => void, onDone?: () => void) {
           const { hash: transactionHash } = await relayerWallet.sendTransaction(tx);
           setOriginTxHash(transactionHash);
           logger.debug('Transfer transaction confirmed, hash:', transactionHash);
-          toastTxSuccess('Remote transfer started!', transactionHash, sourceChainId);
+          toastTxSuccess('Remote transfer started!', transactionHash, destinationChainId);
         }
       } catch (error) {
         logger.error(`Error at stage ${stage} `, error);

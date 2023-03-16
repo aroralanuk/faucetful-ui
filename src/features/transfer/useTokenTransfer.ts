@@ -157,7 +157,6 @@ export function useTokenTransfer(onStart?: () => void, onDone?: () => void) {
           stage = Stage.Swap;
 
           const { amountOut, uncheckedTrade } = await createTrade(false, BigNumber.from(weiAmount));
-          setTrade(uncheckedTrade);
           console.log('uniswap: amountOut', amountOut[0]);
           console.log('uniswap: trade ', uncheckedTrade);
           if (!uncheckedTrade) {

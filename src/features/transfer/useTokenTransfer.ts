@@ -12,7 +12,7 @@ import { toWei } from '../../utils/amount';
 import { logger } from '../../utils/logger';
 import { sleep } from '../../utils/timeout';
 import { getHypErc20Contract } from '../contracts/hypErc20';
-import { TokenTrade, createTrade, executeTrade } from '../contracts/uniswap';
+import { createTrade, executeTrade } from '../contracts/uniswap';
 import { unwrapWETH, wrapETH } from '../contracts/weth';
 import { getProvider, getRelayerWallet } from '../providers';
 import { RoutesMap, getTokenRoute } from '../tokens/routes';
@@ -30,7 +30,6 @@ enum Stage {
 // See https://github.com/wagmi-dev/wagmi/discussions/1564
 export function useTokenTransfer(onStart?: () => void, onDone?: () => void) {
   const [isLoading, setIsLoading] = useState(false);
-  const [trade, setTrade] = useState<TokenTrade>();
   const [latestValues, setLatestValues] = useState<TransferFormValues | null>(null);
   let stage: Stage;
 
@@ -67,7 +66,7 @@ export function useTokenTransfer(onStart?: () => void, onDone?: () => void) {
             );
 
             stage = Stage.WETH;
-            if (!trade || !amountOut[0]) {
+            if (!uncheckedTrade || !amountOut[0]) {
               throw new Error('Unwrap failed');
             }
             const unwrapHash = await unwrapWETH(amountOut[0], latestValues.recipientAddress);

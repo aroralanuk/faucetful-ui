@@ -1,6 +1,6 @@
 import { sendTransaction, switchNetwork } from '@wagmi/core';
 import { BigNumber } from 'ethers';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useChainId } from 'wagmi';
 
@@ -31,9 +31,8 @@ enum Stage {
 export function useTokenTransfer(onStart?: () => void, onDone?: () => void) {
   const [isLoading, setIsLoading] = useState(false);
   const [trade, setTrade] = useState<TokenTrade>();
-  const [deliveryMsg, setDeliveryMsg] = useState<string | undefined>(undefined);
-
-  // const { values } = useFormikContext<TransferFormValues>();
+  const [latestValues, setLatestValues] = useState<TransferFormValues | null>(null);
+  let stage: Stage;
 
   const [originTxHash, setOriginTxHash] = useState<string | null>(null);
   const { message } = useMessageTimeline({
@@ -42,6 +41,56 @@ export function useTokenTransfer(onStart?: () => void, onDone?: () => void) {
 
   const chainId = useChainId();
 
+  useEffect(() => {
+    logger.debug('useEffect: Checking conditions');
+    if (originTxHash && message?.status === 'delivered') {
+      logger.debug('useEffect: Conditions met, executing trade');
+      (async () => {
+        try {
+          if (latestValues?.isSrcNative) {
+            stage = Stage.Swap;
+
+            const weiAmount = toWei(latestValues.amount).toString();
+            const { amountOut, uncheckedTrade } = await createTrade(
+              true,
+              BigNumber.from(weiAmount),
+            );
+            console.log('uniswap: trade amountOut', amountOut[0]);
+            if (!uncheckedTrade) {
+              throw new Error('No trade found');
+            }
+            const execHash = await executeTrade(uncheckedTrade);
+            toastTxSuccess(
+              'Swapped successfully from GETH to WETH',
+              execHash,
+              latestValues.destinationChainId,
+            );
+
+            stage = Stage.WETH;
+            if (!trade || !amountOut[0]) {
+              throw new Error('Unwrap failed');
+            }
+            const unwrapHash = await unwrapWETH(amountOut[0], latestValues.recipientAddress);
+            toastTxSuccess(
+              'Unwrapped successfully to ETH',
+              unwrapHash,
+              latestValues.destinationChainId,
+            );
+          }
+        } catch (error) {
+          logger.error(`Error at stage ${stage} `, error);
+          toast.error(errorMessages[stage]);
+        }
+
+        setIsLoading(false);
+        if (onDone) onDone();
+      })().catch((error) => {
+        // Handle the error here or log it
+        logger.error('Error occurred in useEffect async function:', error);
+      });
+    }
+  }, [message, originTxHash, latestValues]);
+
   // TODO implement cancel callback for when modal is closed?
   const triggerTransactions = useCallback(
     async (values: TransferFormValues, tokenRoutes: RoutesMap) => {
@@ -49,7 +98,7 @@ export function useTokenTransfer(onStart?: () => void, onDone?: () => void) {
       setOriginTxHash(null);
       setIsLoading(true);
       if (onStart) onStart();
-      let stage: Stage = Stage.Prepare;
+      stage = Stage.Prepare;
 
       try {
         const {
@@ -98,42 +147,6 @@ export function useTokenTransfer(onStart?: () => void, onDone?: () => void) {
           setOriginTxHash(transactionHash);
           logger.debug('Transfer transaction confirmed, hash:', transactionHash);
           toastTxSuccess('Remote transfer started!', transactionHash, sourceChainId);
-
-          // console.log('UseTokenTransfer.tsx: modal message: ', await waitForDelivery());
-          // await new Promise((resolve) => setTimeout(resolve, 45000));
-
-          const maxWait = 45; // 60 seconds
-          let timeSpendWaiting = 0;
-          while (timeSpendWaiting < maxWait) {
-            // wait for a short time before checking again
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-
-            console.log('checking for modal delivery... = ', originTxHash);
-
-            // check whether the value has changed
-            if (originTxHash) {
-              return true;
-            }
-            timeSpendWaiting++;
-          }
-
-          stage = Stage.Swap;
-
-          const { amountOut, uncheckedTrade } = await createTrade(true, BigNumber.from(weiAmount));
-          setTrade(uncheckedTrade);
-          console.log('uniswap: trade amountOut', amountOut[0]);
-          if (!uncheckedTrade) {
-            throw new Error('No trade found');
-          }
-          const execHash = await executeTrade(uncheckedTrade);
-          toastTxSuccess('Swapped successfully from GETH to WETH', execHash, destinationChainId);
-
-          stage = Stage.WETH;
-          if (!trade || !amountOut[0]) {
-            throw new Error('Unwrap failed');
-          }
-          const unwrapHash = await unwrapWETH(amountOut[0], recipientAddress);
-          toastTxSuccess('Unwrapped successfully to ETH', unwrapHash, destinationChainId);
         } else {
           // arbitrum to goerli
 
@@ -195,6 +208,7 @@ export function useTokenTransfer(onStart?: () => void, onDone?: () => void) {
       }
 
       setIsLoading(false);
+      setLatestValues(values);
       if (onDone) onDone();
     },
     [setIsLoading, onStart, onDone, chainId],

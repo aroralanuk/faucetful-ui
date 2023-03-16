@@ -1022,48 +1022,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hyperlane-xyz/warp-ui-template@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "@hyperlane-xyz/warp-ui-template@workspace:."
-  dependencies:
-    "@headlessui/react": ^1.7.8
-    "@hyperlane-xyz/hyperlane-token": ^1.2.0
-    "@hyperlane-xyz/sdk": ^1.2.0
-    "@hyperlane-xyz/widgets": ^1.2.0
-    "@metamask/jazzicon": "https://github.com/jmrossy/jazzicon#7a8df28974b4e81129bfbe3cab76308b889032a6"
-    "@rainbow-me/rainbowkit": ^0.8.1
-    "@tanstack/react-query": ^4.24.4
-    "@trivago/prettier-plugin-sort-imports": ^4.0.0
-    "@types/dotenv": ^8.2.0
-    "@types/node": ^18.11.18
-    "@types/react": ^18.0.27
-    "@types/react-dom": ^18.0.10
-    "@typescript-eslint/eslint-plugin": ^5.50.0
-    "@typescript-eslint/parser": ^5.50.0
-    "@uniswap/sdk-core": ^3.2.2
-    "@uniswap/v3-sdk": ^3.9.0
-    autoprefixer: ^10.4.13
-    bignumber.js: ^9.0.2
-    buffer: ^6.0.3
-    dotenv: ^16.0.3
-    eslint: ^8.33.0
-    eslint-config-next: ^13.1.6
-    eslint-config-prettier: ^8.6.0
-    ethers: ^5.7.2
-    formik: ^2.2.9
-    next: ^13.1.6
-    postcss: ^8.4.21
-    prettier: ^2.8.3
-    react: ^18.2.0
-    react-dom: ^18.2.0
-    react-toastify: ^9.1.1
-    tailwindcss: ^3.2.4
-    ts-node: ^10.9.1
-    typescript: ^4.9.5
-    wagmi: 0.11.7
-  languageName: unknown
-  linkType: soft
-
 "@hyperlane-xyz/widgets@npm:^1.2.0":
   version: 1.2.0
   resolution: "@hyperlane-xyz/widgets@npm:1.2.0"
@@ -5248,6 +5206,48 @@ __metadata:
   checksum: 32cf15c29afe622af187d12fc9cd93e160a0cb7c31a3bb6ace86b7dea3b28e7b72acde89c882663f307b2184e14782c6c664fa315973c03626c7d4bff070bb0b
   languageName: node
   linkType: hard
+
+"faucetful@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "faucetful@workspace:."
+  dependencies:
+    "@headlessui/react": ^1.7.8
+    "@hyperlane-xyz/hyperlane-token": ^1.2.0
+    "@hyperlane-xyz/sdk": ^1.2.0
+    "@hyperlane-xyz/widgets": ^1.2.0
+    "@metamask/jazzicon": "https://github.com/jmrossy/jazzicon#7a8df28974b4e81129bfbe3cab76308b889032a6"
+    "@rainbow-me/rainbowkit": ^0.8.1
+    "@tanstack/react-query": ^4.24.4
+    "@trivago/prettier-plugin-sort-imports": ^4.0.0
+    "@types/dotenv": ^8.2.0
+    "@types/node": ^18.11.18
+    "@types/react": ^18.0.27
+    "@types/react-dom": ^18.0.10
+    "@typescript-eslint/eslint-plugin": ^5.50.0
+    "@typescript-eslint/parser": ^5.50.0
+    "@uniswap/sdk-core": ^3.2.2
+    "@uniswap/v3-sdk": ^3.9.0
+    autoprefixer: ^10.4.13
+    bignumber.js: ^9.0.2
+    buffer: ^6.0.3
+    dotenv: ^16.0.3
+    eslint: ^8.33.0
+    eslint-config-next: ^13.1.6
+    eslint-config-prettier: ^8.6.0
+    ethers: ^5.7.2
+    formik: ^2.2.9
+    next: ^13.1.6
+    postcss: ^8.4.21
+    prettier: ^2.8.3
+    react: ^18.2.0
+    react-dom: ^18.2.0
+    react-toastify: ^9.1.1
+    tailwindcss: ^3.2.4
+    ts-node: ^10.9.1
+    typescript: ^4.9.5
+    wagmi: 0.11.7
+  languageName: unknown
+  linkType: soft
 
 "file-entry-cache@npm:^6.0.1":
   version: 6.0.1

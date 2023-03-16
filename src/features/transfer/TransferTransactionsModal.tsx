@@ -100,15 +100,12 @@ function Timeline({
           Please connect wallet to proceed
         </div>
       )}
-      {message && <Message id={message.id} status={message.status} />}
+      {message && <Message id={message.id} />}
     </div>
   );
 }
 
-function Message({ id, status }: { id: string; status: MessageStatus }) {
-  // useFormikContext<TransferFormValues>().setFieldValue('messageStatus', status);
-  // console.log('modal status: ', status);
-
+function Message({ id }: { id: string }) {
   return (
     <a
       className="mt-4 text-gray-500 underline underline-offset-2"

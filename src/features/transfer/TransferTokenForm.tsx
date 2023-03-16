@@ -281,22 +281,10 @@ function TokenBalance({ label, balance }: { label: string; balance?: string | nu
   return <div className="text-xs text-gray-500">{`${label}: ${rounded}`}</div>;
 }
 
-function useSelfTokenBalance(tokenRoutes) {
+function useSelfTokenBalance() {
   const { values } = useFormikContext<TransferFormValues>();
-  const { sourceChainId, destinationChainId, tokenAddress } = values;
-  const route = getTokenRoute(sourceChainId, destinationChainId, tokenRoutes);
-  const addressForBalance = !route
-    ? ''
-    : route.nativeChainId === sourceChainId
-    ? tokenAddress
-    : route.sourceTokenAddress;
-  // return useAccountTokenBalance(sourceChainId, addressForBalance);
+  const { sourceChainId } = values;
   return useAccountNativeBalance(sourceChainId);
-}
-
-function SelfTokenBalance({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
-  const { balance } = useSelfTokenBalance(tokenRoutes);
-  return <TokenBalance label="My balance" balance={balance} />;
 }
 
 function SelfNativeBalance({ chainId }: { chainId: number }) {
@@ -304,9 +292,9 @@ function SelfNativeBalance({ chainId }: { chainId: number }) {
   return <TokenBalance label="My balance" balance={balance} />;
 }
 
-function MaxButton({ tokenRoutes, disabled }: { tokenRoutes: RoutesMap; disabled?: boolean }) {
+function MaxButton({ disabled }: { tokenRoutes: RoutesMap; disabled?: boolean }) {
   const { setFieldValue } = useFormikContext<TransferFormValues>();
-  const { balance } = useSelfTokenBalance(tokenRoutes);
+  const { balance } = useSelfTokenBalance();
   const onClick = () => {
     if (balance && !disabled) setFieldValue('amount', fromWeiRounded(balance));
   };
@@ -372,7 +360,7 @@ function SelfButton({ disabled }: { disabled?: boolean }) {
 
 function ReviewDetails({ visible, tokenRoutes }: { visible: boolean; tokenRoutes: RoutesMap }) {
   const {
-    values: { amount, sourceChainId, destinationChainId, tokenAddress, amountOut },
+    values: { amount, sourceChainId, destinationChainId, amountOut },
   } = useFormikContext<TransferFormValues>();
   const weiAmount = toWei(amount).toString();
   const weiAmountOut = toWei(amountOut).toString();

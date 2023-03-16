@@ -35,8 +35,9 @@ export function isNative(chainId: string, tokenRoutes: RoutesMap | null) {
           if ((route as Route).type == RouteType.NativeToRemote) return true;
         }
       }
-    } else return false;
+    }
   }
+  return false;
 }
 
 // Process token list to populates routesCache with all possible token routes (e.g. router pairs)

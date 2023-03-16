@@ -26,7 +26,7 @@ const securityHeaders = [
   {
     key: 'Content-Security-Policy',
     value: `default-src 'self'; script-src 'self'${
-      isDev ? " 'unsafe-eval'" : ''
+      true ? " 'unsafe-eval'" : ''
     }; connect-src *; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; base-uri 'self'; form-action 'self'`,
   },
 ]

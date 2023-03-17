@@ -87,14 +87,9 @@ function Timeline({
         hideDescriptions={true}
       />
       {isAccountReady ? (
-        <>
-          <div className="mt-5 text-sm text-center text-gray-500">
-            {requiresApprove
-              ? 'Attempting to send two transactions: Approve and TransferRemote'
-              : 'Attempting to send transaction: TransferRemote'}
-          </div>
-          <div className="mt-3 text-sm text-center text-gray-500">{`Sign with ${connectorName} to proceed`}</div>
-        </>
+        <div className="mt-5 text-sm text-center text-gray-500">
+          Attempting to send transaction: TransferRemote
+        </div>
       ) : (
         <div className="mt-5 text-sm text-center text-gray-500">
           Please connect wallet to proceed
@@ -107,14 +102,16 @@ function Timeline({
 
 function Message({ id }: { id: string }) {
   return (
-    <a
-      className="mt-4 text-gray-500 underline underline-offset-2"
-      href={`${links.explorer}/message/${trimLeading0x(id)}`}
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      Open Transaction in Hyperlane Explorer
-    </a>
+    <>
+      <a
+        className="mt-4 text-gray-500 underline underline-offset-2"
+        href={`${links.explorer}/message/${trimLeading0x(id)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Open Transaction in Hyperlane Explorer
+      </a>
+    </>
   );
 }
 

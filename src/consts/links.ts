@@ -8,4 +8,6 @@ export const links = {
   jobs: 'https://jobs.lever.co/Hyperlane',
   twitter: 'https://twitter.com/hyperlane_xyz',
   blog: 'https://medium.com/hyperlane',
+  uniswap:
+    'https://app.uniswap.org/#/swap?chainId=42161&outputCurrency=0x18784bc2FEe75461ef8e819E608B25Af9F352080',
 };

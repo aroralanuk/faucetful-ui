@@ -1,23 +1,44 @@
 {
-  "mycustomchain": {
-    "chainId": 1234,
-    "name": "mycustomchain",
-    "displayName": "My Chain",
+  "goerli": {
+    "chainId": 5,
+    "name": "goerli",
+    "displayName": "Goerli",
     "nativeToken": { "name": "Ether", "symbol": "ETH", "decimals": 18 },
-    "publicRpcUrls": [{ "http": "https://mycustomchain-rpc.com" }],
+    "publicRpcUrls": [{ "http": "https://eth-goerli.public.blastapi.io" }],
     "blockExplorers": [
       {
-        "name": "MyCustomScan",
-        "url": "https://mycustomchain-scan.com",
-        "apiUrl": "https://api.mycustomchain-scan.com",
+        "name": "Goerliscan",
+        "url": "https://goerli.etherscan.io",
+        "apiUrl": "https://api-goerli.etherscan.io",
         "family": "etherscan"
       }
     ],
     "blocks": {
       "confirmations": 1,
-      "reorgPeriod": 1,
-      "estimateBlockTime": 10
-    },
-    "logoImgSrc": "/logo.svg"
+      "reorgPeriod": 2,
+      "estimateBlockTime": 13
+    }
+  },
+  "arbitrum": {
+    "chainId": 42161,
+    "name": "arbitrum",
+    "displayName": "Arbitrum",
+    "nativeToken": { "name": "Ether", "symbol": "ETH", "decimals": 18 },
+    "publicRpcUrls": [
+      { "http": "https://arbitrum-mainnet.infura.io/v3/26423ae5f7f645398aa0f783e7ced5a6" }
+    ],
+    "blockExplorers": [
+      {
+        "name": "Arbiscan",
+        "url": "https://arbiscan.io",
+        "apiUrl": "https://api.arbiscan.io",
+        "family": "aribscan"
+      }
+    ],
+    "blocks": {
+      "confirmations": 1,
+      "reorgPeriod": 2,
+      "estimateBlockTime": 5
+    }
   }
 }

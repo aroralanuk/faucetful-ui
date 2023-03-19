@@ -1,4 +1,4 @@
-import { RainbowKitProvider, connectorsForWallets, lightTheme } from '@rainbow-me/rainbowkit';
+import { RainbowKitProvider, connectorsForWallets, darkTheme } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
 import {
   argentWallet,
@@ -84,7 +84,7 @@ export default function App({ Component, pageProps }: AppProps) {
       <WagmiConfig client={wagmiClient}>
         <RainbowKitProvider
           chains={chains}
-          theme={lightTheme({
+          theme={darkTheme({
             accentColor: Color.primaryBlue,
             borderRadius: 'small',
             fontStack: 'system',

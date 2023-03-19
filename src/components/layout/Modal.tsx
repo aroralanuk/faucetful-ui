@@ -1,5 +1,5 @@
 import { Dialog, Transition } from '@headlessui/react';
-import { Fragment, PropsWithChildren } from 'react';
+import { Fragment, MouseEvent, PropsWithChildren } from 'react';
 
 import XCircle from '../../images/icons/x-circle.svg';
 import { IconButton } from '../buttons/IconButton';
@@ -11,9 +11,25 @@ export function Modal({
   width,
   children,
 }: PropsWithChildren<{ isOpen: boolean; title: string; close: () => void; width?: string }>) {
+  const handleClose = (event: MouseEvent | null) => {
+    if (event && event.target !== event.currentTarget) {
+      return;
+    }
+    close();
+  };
+
   return (
     <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-30" onClose={close}>
+      <Dialog
+        as="div"
+        className="relative z-30"
+        onClose={(value: boolean) => {
+          if (value) {
+            handleClose(null);
+          }
+        }}
+        static
+      >
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"

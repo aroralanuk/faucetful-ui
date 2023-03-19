@@ -2,7 +2,7 @@ import { PropsWithChildren, ReactElement } from 'react';
 
 interface ButtonProps {
   type?: 'submit' | 'reset' | 'button';
-  color?: 'white' | 'blue' | 'green' | 'red' | 'gray'; // defaults to blue
+  color?: 'white' | 'blue' | 'green' | 'red' | 'gray' | 'yellow' | 'bluish'; // defaults to blue
   bold?: boolean;
   classes?: string;
   icon?: ReactElement;
@@ -26,7 +26,15 @@ export function SolidButton(
 
   const base = 'flex items-center justify-center rounded-md transition-all duration-500';
   let baseColors, onHover, onActive;
-  if (color === 'blue') {
+  if (color === 'yellow') {
+    baseColors = 'bg-gradient-to-r from-yellow-300 via-yellow-500 to-yellow-700 text-white';
+    onHover = 'hover:bg-yellow-700';
+    onActive = 'active:bg-blue-700';
+  } else if (color === 'bluish') {
+    baseColors = 'bg-bluish-500 text-white opacity-70';
+    onHover = 'hover:bg-bluish-400 opacity-100';
+    onActive = 'active:bg-bluish-700';
+  } else if (color === 'blue') {
     baseColors = 'bg-blue-500 text-white';
     onHover = 'hover:bg-blue-600';
     onActive = 'active:bg-blue-700';
@@ -61,7 +69,7 @@ export function SolidButton(
       {...passThruProps}
     >
       {icon ? (
-        <div className="flex items-center justify-center space-x-1">
+        <div className="flex items-center justify-center space-x-1 btn-gradient">
           {props.icon}
           {props.children}
         </div>

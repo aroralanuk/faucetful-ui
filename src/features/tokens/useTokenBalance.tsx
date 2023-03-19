@@ -17,14 +17,18 @@ export function getNativeBalanceKey(chainId: number, accountAddress?: Address) {
   return ['nativeBalance', chainId, accountAddress];
 }
 
-export function useAccountTokenBalance(chainId: number, tokenAddress: Address) {
+export function useAccountTokenBalance(
+  chainId: number,
+  tokenAddress: Address,
+  givenAddress?: Address,
+) {
   const { address: accountAddress } = useAccount();
-  return useTokenBalance(chainId, tokenAddress, accountAddress);
+  return useTokenBalance(chainId, tokenAddress, givenAddress || accountAddress);
 }
 
-export function useAccountNativeBalance(chainId: number) {
+export function useAccountNativeBalance(chainId: number, givenAddress?: Address) {
   const { address: accountAddress } = useAccount();
-  return useNativeBalance(chainId, accountAddress);
+  return useNativeBalance(chainId, givenAddress || accountAddress);
 }
 
 export function useNativeBalance(chainId: number, accountAddress?: Address) {

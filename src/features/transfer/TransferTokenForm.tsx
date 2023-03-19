@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { switchNetwork } from '@wagmi/core';
 import { BigNumber } from 'ethers';
 import { Form, Formik, useFormikContext } from 'formik';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAccount } from 'wagmi';
 
 import { WideChevron } from '@hyperlane-xyz/widgets';
@@ -93,9 +93,9 @@ export function TransferTokenForm({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
   const onStartTransactions = () => {
     setIsModalOpen(true);
   };
+
   const onDoneTransactions = () => {
     setIsReview(false);
-    // Consider clearing form inputs here
   };
   const { triggerTransactions, originTxHash } = useTokenTransfer(
     onStartTransactions,
@@ -111,7 +111,7 @@ export function TransferTokenForm({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
       validateOnBlur={false}
     >
       {({ values }) => (
-        <Form className="flex flex-col items-stretch w-full mt-2">
+        <Form className="flex flex-col items-stretch w-full mt-2 transferForm">
           <div className="flex items-center justify-center space-x-7 sm:space-x-10">
             <ChainSelectField
               name="sourceChainId"
@@ -161,7 +161,7 @@ export function TransferTokenForm({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
                     <label htmlFor="tokenAddress" className="block text-sm text-gray-500 pl-0.5">
                       Testnet ETH
                     </label>
-                    <SelfNativeBalance chainId={values.sourceChainId} />
+                    <SelfNativeBalance chainId={values.sourceChainId} originTxHash={originTxHash} />
                   </>
                 ) : (
                   <>
@@ -184,14 +184,14 @@ export function TransferTokenForm({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
                     <label htmlFor="tokenAddress" className="block text-sm text-gray-500 pl-0.5">
                       GETH
                     </label>
-                    <SelfTokenBalance tokenRoutes={tokenRoutes} isSrc={false} />
+                    <RecipientTokenBalance tokenRoutes={tokenRoutes} isSrc={false} />
                   </>
                 ) : (
                   <>
                     <label htmlFor="tokenAddress" className="block text-sm text-gray-500 pl-0.5">
                       Testnet ETH
                     </label>
-                    <SelfNativeBalance chainId={values.destinationChainId} />
+                    <RecipientNativeBalance chainId={values.destinationChainId} />
                   </>
                 )}
               </div>
@@ -318,13 +318,43 @@ function useSelfTokenBalance(tokenRoutes, isSrc) {
   return useAccountTokenBalance(chainId, addressForBalance);
 }
 
-function SelfNativeBalance({ chainId }: { chainId: number }) {
+function useRecipientTokenBalance(tokenRoutes, isSrc) {
+  const { values } = useFormikContext<TransferFormValues>();
+  const { sourceChainId, destinationChainId, recipientAddress } = values;
+  const route = getTokenRoute(sourceChainId, destinationChainId, tokenRoutes);
+  const chainId = isSrc ? sourceChainId : destinationChainId;
+  const addressForBalance = (isSrc ? route?.sourceTokenAddress : route?.destTokenAddress) || '';
+  return useAccountTokenBalance(chainId, addressForBalance, recipientAddress);
+}
+
+function SelfNativeBalance({
+  chainId,
+  originTxHash,
+}: {
+  chainId: number;
+  originTxHash: string | null;
+}) {
+  useEffect(() => {
+    console.log('hehe');
+  }, [originTxHash]);
   const { balance } = useAccountNativeBalance(chainId);
+  return <TokenBalance label="My balance" balance={balance} />;
+}
+
+function RecipientNativeBalance({ chainId }: { chainId: number }) {
+  const { values } = useFormikContext<TransferFormValues>();
+  const { recipientAddress } = values;
+  const { balance } = useAccountNativeBalance(chainId, recipientAddress);
   return <TokenBalance label="My balance" balance={balance} />;
 }
 
 function SelfTokenBalance({ tokenRoutes, isSrc }: { tokenRoutes: RoutesMap; isSrc: boolean }) {
   const { balance } = useSelfTokenBalance(tokenRoutes, isSrc);
+  return <TokenBalance label="My balance" balance={balance} />;
+}
+
+function RecipientTokenBalance({ tokenRoutes, isSrc }: { tokenRoutes: RoutesMap; isSrc: boolean }) {
+  const { balance } = useRecipientTokenBalance(tokenRoutes, isSrc);
   return <TokenBalance label="My balance" balance={balance} />;
 }
 
@@ -348,9 +378,9 @@ function MaxButtonNative({ disabled }: { disabled?: boolean }) {
     <SolidButton
       type="button"
       onClick={onClick}
-      color="gray"
+      color="bluish"
       disabled={disabled}
-      classes="text-xs rounded-sm absolute right-0.5 top-2 bottom-0.5 px-2"
+      classes="text-xs rounded-sm absolute text-primary right-0.5 top-2 bottom-0.5 px-2"
     >
       MAX
     </SolidButton>
@@ -368,9 +398,9 @@ function MaxButtonToken({ tokenRoutes, disabled }: { tokenRoutes: RoutesMap; dis
     <SolidButton
       type="button"
       onClick={onClick}
-      color="gray"
+      color="bluish"
       disabled={disabled}
-      classes="text-xs rounded-sm absolute right-0.5 top-2 bottom-0.5 px-2"
+      classes="text-xs text-primary rounded-sm absolute right-0.5 top-2 bottom-0.5 px-2"
     >
       MAX
     </SolidButton>
@@ -396,7 +426,7 @@ function AmountField({ isReview, zeroForOne }: { isReview: boolean; zeroForOne: 
     <TextField
       name="amount"
       placeholder="0.00"
-      classes="w-full"
+      classes="w-full bg-bluish-700 border-yellow-500"
       type="number"
       step="any"
       disabled={isReview}
@@ -415,9 +445,9 @@ function SelfButton({ disabled }: { disabled?: boolean }) {
     <SolidButton
       type="button"
       onClick={onClick}
-      color="gray"
+      color="bluish"
       disabled={disabled}
-      classes="text-xs rounded-sm absolute right-0.5 top-2 bottom-0.5 px-1.5"
+      classes="text-xs text-primary rounded-sm absolute right-0.5 top-2 bottom-0.5 px-1.5"
     >
       SELF
     </SolidButton>
@@ -450,13 +480,3 @@ function ReviewDetails({ visible, tokenRoutes }: { visible: boolean; tokenRoutes
     </div>
   );
 }
-
-// goerli to arbitrum
-// - transfer remote
-// - swap geth to weth
-// - unwrap weth to eth
-
-// arbitrum to goerli
-// - wrap eth to weth
-// - swap weth to geth
-// - transfer remote

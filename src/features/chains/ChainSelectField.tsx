@@ -33,7 +33,7 @@ export function ChainSelectField({ name, label, chainIds, onChange, disabled }: 
 
   return (
     <div className="flex flex-col items-center">
-      <div className="flex flex-col items-center justify-center rounded-full bg-gray-100 h-[5.5rem] w-[5.5rem] p-1.5">
+      <div className="flex flex-col items-center justify-center rounded-full bg-bluish-500 h-[5.5rem] w-[5.5rem] p-1.5">
         <div className="flex items-end h-11">
           <ChainLogo chainId={field.value} size={34} />
         </div>
@@ -64,7 +64,7 @@ export function ChainSelectField({ name, label, chainIds, onChange, disabled }: 
 }
 
 const styles = {
-  base: 'w-36 px-2.5 py-2 relative -top-1.5 flex items-center justify-between text-sm bg-white rounded border border-gray-400 outline-none transition-colors duration-500',
+  base: 'w-36 px-2.5 py-2 relative -top-1.5 flex items-center justify-between text-sm bg-white rounded outline-none transition-colors duration-500',
   enabled: 'hover:bg-gray-50 active:bg-gray-100 focus:border-blue-500',
-  disabled: 'bg-gray-150 cursor-default',
+  disabled: 'bg-bluish-700 cursor-default',
 };

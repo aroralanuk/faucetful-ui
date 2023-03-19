@@ -35,7 +35,7 @@ select:focus {
 }
 
 /*
-Background 
+Background
 ==========
 */
 #app-content::before {
@@ -45,11 +45,34 @@ Background
   display: block;
   width: 100vw;
   height: 100vh;
-  background-color: #f3f4f6;
-  background-image: url('/background-texture.png');
+  background-color: #0D0C1C;
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center top;
+}
+
+* {
+  color: #dbdbdb
+}
+
+.text-primary {
+  color: #dbdbdb
+}
+
+.text-inverted {
+  color: #010101
+}
+
+.transfer-form {
+  /* background-color: #0D0C1C; */
+  border-radius: 0.72rem;
+  padding: 1.5rem;
+  border-width: 0rem;
+  color: #b00
+}
+
+button {
+  background-color: #0D0C1C;
 }
 
 /*

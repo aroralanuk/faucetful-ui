@@ -58,10 +58,10 @@ function AccountDropdown() {
   return (
     <Menu as="div" className="relative">
       {isAccountReady ? (
-        <Menu.Button className="px-3 py-0.5 flex items-center justify-center rounded-sm hover:bg-gray-100 active:bg-gray-200 transition-all duration-500">
+        <Menu.Button className="px-3 py-0.5 flex items-center justify-center rounded-sm hover:bg-bluish-500 active:bg-gray-200 transition-all duration-500">
           <Identicon address={address} size={26} />
           <div className="flex flex-col mx-3 items-start">
-            <div className="text-xs text-gray-500">{connector.name}</div>
+            <div className="text-xs text-gray-400">{connector.name}</div>
             <div className="text-xs">{shortenAddress(address, true)}</div>
           </div>
           <Icon src={ChevronDown} size={14} />
@@ -69,11 +69,12 @@ function AccountDropdown() {
       ) : (
         <SolidButton
           classes="py-1.5 px-2.5"
+          color="yellow"
           onClick={openConnectModal}
           title="Choose wallet"
           icon={<Image src={Wallet} alt="" width={16} height={16} />}
         >
-          <div className="ml-1.5 text-white text-xs sm:text-sm">Connect Wallet</div>
+          <div className="ml-1.5 text-white text-xs sm:text-sm">Connect</div>
         </SolidButton>
       )}
 
@@ -124,5 +125,5 @@ function Icon({ src, alt, size }: { src: any; alt?: string; size?: number }) {
 
 const styles = {
   dropdownOption:
-    'w-full flex items-center px-5 py-2 mt-1 text-sm hover:bg-gray-100 active:bg-gray-200 transition-all duration-500',
+    'w-full flex items-center px-5 py-2 mt-1 text-sm bg-bluish-700 hover:bg-bluish-500 active:bg-bluish-400 transition-all duration-500',
 };

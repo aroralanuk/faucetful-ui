@@ -17,8 +17,9 @@ module.exports = {
     extend: {
       colors: {
         black: '#010101',
-        white: '#ffffff',
-        gray: {...defaultTheme.colors.gray, 150: '#EBEDF0'},
+        // light-bg: ""
+        white: '#1B1839',
+        gray: { ...defaultTheme.colors.gray, 150: '#EBEDF0' },
         blue: {
           50: '#E9F0F7',
           100: '#CCDEEC',
@@ -30,6 +31,16 @@ module.exports = {
           700: '#013660',
           800: '#002440',
           900: '#001220',
+        },
+        yellow: {
+          300: '#edd5a8',
+          500: '#e2b972',
+          700: '#d79e3b',
+        },
+        bluish: {
+          400: "#3a367d",
+          500: "#292659",
+          700: '#0D0C1C',
         },
         red: {
           100: '#EBBAB8',
@@ -80,9 +91,9 @@ module.exports = {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;',
       },
       transitionProperty: {
-        'height': 'height, max-height',
-        'spacing': 'margin, padding',
-      }
+        height: 'height, max-height',
+        spacing: 'margin, padding',
+      },
     },
   },
   plugins: [],

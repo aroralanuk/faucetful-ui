@@ -23,7 +23,7 @@ export function ConnectAwareSubmitButton<FormValues = any>({ text, classes }: Pr
   const hasError = Object.keys(touched).length > 0 && Object.keys(errors).length > 0;
   const firstError = `${Object.values(errors)[0]}` || 'Unknown error';
 
-  const color = hasError ? 'red' : 'blue';
+  const color = hasError ? 'red' : 'yellow';
   const content = hasError ? firstError : isAccountReady ? text : 'Connect Wallet';
   const type = isAccountReady ? 'submit' : 'button';
   const onClick = isAccountReady ? undefined : openConnectModal;

@@ -2,10 +2,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import { links } from '../../consts/links';
-import Logo from '../../images/logos/app-logo.svg';
-import Discord from '../../images/logos/discord.svg';
 import Github from '../../images/logos/github.svg';
-import Medium from '../../images/logos/medium.svg';
+import Logo from '../../images/logos/hyperlane-logo-white.svg';
 import Twitter from '../../images/logos/twitter.svg';
 
 export function Footer() {
@@ -16,28 +14,20 @@ export function Footer() {
           <div className="flex">
             <Image src={Logo} width={45} height={45} alt="" />
           </div>
-          <div className="hidden sm:flex flex-col ml-3">
+          <a className="hidden sm:flex flex-col ml-3" href={links.home}>
             <p className="text-sm font-light leading-5">
-              <span className="text-base font-medium">Hyperlane</span> is the platform
+              Powered by
               <br />
-              for developers building
-              <br />
-              the interchain universe.
+              <span className="text-base font-medium">Hyperlane</span>
             </p>
-          </div>
+          </a>
         </div>
         <div className="flex">
           <div className="flex flex-col">
-            <FooterLink href={links.home} text="About" />
-            <FooterLink href={links.explorer} text="Explorer" />
-            <FooterLink href={links.docs} text="Docs" />
-            <FooterLink href={links.chains} text="Chains" />
+            <FooterIconLink href={links.twitter} imgSrc={Twitter} text="Twitter" />
           </div>
           <div className="flex flex-col ml-16">
-            <FooterIconLink href={links.twitter} imgSrc={Twitter} text="Twitter" />
-            <FooterIconLink href={links.discord} imgSrc={Discord} text="Discord" />
             <FooterIconLink href={links.github} imgSrc={Github} text="Github" />
-            <FooterIconLink href={links.blog} imgSrc={Medium} text="Blog" />
           </div>
         </div>
       </div>

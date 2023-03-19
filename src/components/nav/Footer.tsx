@@ -1,5 +1,4 @@
 import Image from 'next/image';
-import Link from 'next/link';
 
 import { links } from '../../consts/links';
 import Github from '../../images/logos/github.svg';
@@ -10,15 +9,15 @@ export function Footer() {
   return (
     <footer className="py-4 opacity-80">
       <div className="flex flex-row justify-between items-center gap-6 sm:gap-0">
-        <div className="flex items-center pt-2">
+        <div className="flex items-center py-4">
           <div className="flex">
-            <Image src={Logo} width={45} height={45} alt="" />
+            <Image src={Logo} width={50} height={50} alt="" />
           </div>
           <a className="hidden sm:flex flex-col ml-3" href={links.home}>
             <p className="text-sm font-light leading-5">
               Powered by
               <br />
-              <span className="text-base font-medium">Hyperlane</span>
+              <span className="text-lg font-medium">Hyperlane</span>
             </p>
           </a>
         </div>
@@ -33,25 +32,6 @@ export function Footer() {
       </div>
     </footer>
   );
-}
-
-function FooterLink({ href, text }: { href: string; text: string }) {
-  const aClasses =
-    'mt-1.5 text-sm hover:underline underline-offset-4 hover:opacity-70 transition-all';
-
-  if (href[0] === '/') {
-    return (
-      <Link href={href} className={aClasses}>
-        {text}
-      </Link>
-    );
-  } else {
-    return (
-      <a href={href} target="_blank" rel="noopener noreferrer" className={aClasses}>
-        {text}
-      </a>
-    );
-  }
 }
 
 function FooterIconLink({ href, imgSrc, text }: { href: string; imgSrc: any; text: string }) {

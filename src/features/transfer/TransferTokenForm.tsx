@@ -233,16 +233,16 @@ export function TransferTokenForm({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
             <div className="mt-4 flex items-center justify-between space-x-4">
               <SolidButton
                 type="button"
-                color="gray"
+                color="bluish"
                 onClick={onClickEdit}
                 classes="px-6 py-1.5"
-                icon={<ChevronIcon direction="w" width={13} color={Color.primaryBlue} />}
+                icon={<ChevronIcon direction="w" width={13} color={Color.lightGray} />}
               >
                 <span>Edit</span>
               </SolidButton>
               <SolidButton
                 type="button"
-                color="blue"
+                color="yellow"
                 onClick={() => triggerTransactions(values, tokenRoutes)}
                 classes="flex-1 px-3 py-1.5"
               >
@@ -468,7 +468,7 @@ function ReviewDetails({ visible, tokenRoutes }: { visible: boolean; tokenRoutes
       } overflow-hidden transition-all`}
     >
       <label className="mt-4 block uppercase text-sm text-gray-500 pl-0.5">Transactions</label>
-      <div className="mt-1.5 px-2.5 py-2 space-y-2 rounded border border-gray-400 bg-gray-150 text-sm break-all">
+      <div className="mt-1.5 px-2.5 py-2 space-y-2 rounded  bg-bluish-700 text-sm break-all">
         <div>
           <h4>{`Transaction${nativeToRemote ? ' 1' : ' 3'}: Transfer Remote`}</h4>
           <div className="mt-1.5 ml-1.5 pl-2 border-l border-gray-300 space-y-1.5 text-xs">

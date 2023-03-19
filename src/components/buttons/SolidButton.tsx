@@ -55,7 +55,7 @@ export function SolidButton(
     onHover = 'hover:bg-gray-200';
     onActive = 'active:bg-gray-300';
   }
-  const onDisabled = 'disabled:bg-gray-300 disabled:text-gray-500';
+  const onDisabled = 'disabled:bg-bluish-700 disabled:text-gray-500';
   const weight = bold ? 'font-semibold' : '';
   const allClasses = `${base} ${baseColors} ${onHover} ${onDisabled} ${onActive} ${weight} ${classes}`;
 

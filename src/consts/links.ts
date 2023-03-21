@@ -7,7 +7,7 @@ export const links = {
   chains: 'https://docs.hyperlane.xyz/hyperlane-docs/developers/domains',
   jobs: 'https://jobs.lever.co/Hyperlane',
   twitter: 'https://twitter.com/aroralanuk',
-  blog: 'https://medium.com/hyperlane',
+  blog: 'https://aurorabykunal.substack.com/',
   uniswap:
     'https://app.uniswap.org/#/swap?chainId=42161&outputCurrency=0x18784bc2FEe75461ef8e819E608B25Af9F352080',
 };

@@ -50,7 +50,7 @@ export function TipCard() {
           className="ml-2 px-3 py-1.5 flex items-center bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-xs sm:text-sm text-blue-500 rounded-md transition-all"
         >
           <Image src={InfoCircle} width={16} alt="" />
-          <span className="ml-1.5 text-inverted">Go to Uniswap</span>
+          <span className="ml-1.5 text-bluish-500">Go to Uniswap</span>
         </a>
       </div>
 

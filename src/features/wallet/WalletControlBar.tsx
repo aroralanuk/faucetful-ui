@@ -125,5 +125,5 @@ function Icon({ src, alt, size }: { src: any; alt?: string; size?: number }) {
 
 const styles = {
   dropdownOption:
-    'w-full flex items-center px-5 py-2 mt-1 text-sm bg-bluish-700 hover:bg-bluish-500 active:bg-bluish-400 transition-all duration-500',
+    'w-full flex items-center px-5 py-2 mt-1 text-sm item-whte bg-white hover:bg-bluish-500 active:bg-bluish-500 transition-all duration-500',
 };

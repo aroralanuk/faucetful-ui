@@ -125,7 +125,7 @@ export function TransferTokenForm({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
                   width="17"
                   height="100%"
                   direction="e"
-                  color={Color.lightGray}
+                  color={Color.primaryGray}
                   classes="hidden sm:block"
                   rounded={true}
                 />
@@ -133,14 +133,14 @@ export function TransferTokenForm({ tokenRoutes }: { tokenRoutes: RoutesMap }) {
                   width="17"
                   height="100%"
                   direction="e"
-                  color={Color.lightGray}
+                  color={Color.primaryGray}
                   rounded={true}
                 />
                 <WideChevron
                   width="17"
                   height="100%"
                   direction="e"
-                  color={Color.lightGray}
+                  color={Color.primaryGray}
                   rounded={true}
                 />
               </div>
@@ -345,7 +345,7 @@ function RecipientNativeBalance({ chainId }: { chainId: number }) {
   const { values } = useFormikContext<TransferFormValues>();
   const { recipientAddress } = values;
   const { balance } = useAccountNativeBalance(chainId, recipientAddress);
-  return <TokenBalance label="My balance" balance={balance} />;
+  return <TokenBalance label="Recipient balance" balance={balance} />;
 }
 
 function SelfTokenBalance({ tokenRoutes, isSrc }: { tokenRoutes: RoutesMap; isSrc: boolean }) {
@@ -355,7 +355,7 @@ function SelfTokenBalance({ tokenRoutes, isSrc }: { tokenRoutes: RoutesMap; isSr
 
 function RecipientTokenBalance({ tokenRoutes, isSrc }: { tokenRoutes: RoutesMap; isSrc: boolean }) {
   const { balance } = useRecipientTokenBalance(tokenRoutes, isSrc);
-  return <TokenBalance label="My balance" balance={balance} />;
+  return <TokenBalance label="Recipient balance" balance={balance} />;
 }
 
 function MaxButton({ tokenRoutes, disabled }: { tokenRoutes: RoutesMap; disabled?: boolean }) {
@@ -426,7 +426,7 @@ function AmountField({ isReview, zeroForOne }: { isReview: boolean; zeroForOne: 
     <TextField
       name="amount"
       placeholder="0.00"
-      classes="w-full bg-bluish-700 border-yellow-500"
+      classes="w-full bg-bluish-700 border-yellow-500 active:border-yellow-500 focus:border-yellow-500"
       type="number"
       step="any"
       disabled={isReview}

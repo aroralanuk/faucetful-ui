@@ -20,7 +20,7 @@ export function TxSuccessToast({
   const explorerBaseUrl = getChainExplorerUrl(chainId);
   const url = explorerBaseUrl ? `${explorerBaseUrl}/tx/${txHash}` : '';
   return (
-    <div>
+    <div className="text-gray-700">
       {msg + ' '}
       {url && (
         <a className="underline" href={url} target="_blank" rel="noopener noreferrer">

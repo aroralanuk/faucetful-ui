@@ -19,7 +19,7 @@ module.exports = {
         black: '#010101',
         // light-bg: ""
         white: '#1B1839',
-        gray: { ...defaultTheme.colors.gray, 150: '#EBEDF0' },
+        gray: { ...defaultTheme.colors.gray, 150: '#EBEDF0', 500: '#afafaf' },
         blue: {
           50: '#E9F0F7',
           100: '#CCDEEC',
@@ -38,8 +38,8 @@ module.exports = {
           700: '#d79e3b',
         },
         bluish: {
-          400: "#3a367d",
-          500: "#292659",
+          400: '#3a367d',
+          500: '#292659',
           700: '#0D0C1C',
         },
         red: {

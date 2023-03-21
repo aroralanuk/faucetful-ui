@@ -31,7 +31,7 @@ import { useIsSsr } from '../utils/ssr';
 const { chains, provider } = configureChains(getWagmiChainConfig(), [publicProvider()]);
 
 const connectorConfig = {
-  appName: 'Hyperlane Warp Template',
+  appName: 'Faucetful',
   chains,
 };
 

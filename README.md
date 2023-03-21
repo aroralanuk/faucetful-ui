@@ -1,6 +1,8 @@
-# Hyperlane Warp Route UI Template
+# Faucetful UI
 
-This repo contains an example web interface for a interchain tokens built with [Hyperlane Warp Route](https://docs.hyperlane.xyz/hyperlane-docs). Warp is a framework to permisionlessly bridge tokens to any chain.
+This repo contains the web interface for Faucetful (testnet-mainnet bridge) built on top of
+[Hyperlane](https://hyperlane.xyz/). More details about the project can be found in the [Blog
+Post](https://aurorabykunal.substack.com/p/ae541b8c-eda6-4db4-8f53-9d00fe6ec3b3) and the contracts can be found in the [Faucetful repo](https://github.com/aroralanuk/faucetful).
 
 ## Architecture
 
@@ -53,7 +55,7 @@ yarn prettier
 ### Clean / Reset
 
 ```sh
-# Delete build artifacts to start fresh 
+# Delete build artifacts to start fresh
 yarn clean
 ```
 

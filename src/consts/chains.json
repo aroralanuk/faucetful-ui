@@ -25,7 +25,7 @@
     "displayName": "Arbitrum",
     "nativeToken": { "name": "Ether", "symbol": "ETH", "decimals": 18 },
     "publicRpcUrls": [
-      { "http": "https://arbitrum-mainnet.infura.io/v3/26423ae5f7f645398aa0f783e7ced5a6" }
+      { "http": "https://arbitrum.blockpi.network/v1/rpc/public" }
     ],
     "blockExplorers": [
       {
